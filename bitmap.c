@@ -3,10 +3,10 @@
 
 BitMapEntryKey BitMap_blockToIndex(int num){
     
-    BitMapEntryKey bmap;
-    bmap.entry_num = num / 8;   //how many bytes?
-    bmap.bit_num = num - (8 * (num / 8));   //offset
-    return bmap;
+    BitMapEntryKey bmapentry;
+    bmapentry.entry_num = num / 8;   //how many bytes?
+    bmapentry.bit_num = num - (8 * (num / 8));   //offset
+    return bmapentry;
 }
 
 int BitMap_indexToBlock(int entry, uint8_t bit_num){
@@ -22,10 +22,10 @@ int BitMap_get(BitMap* bmap, int start, int status){
     if(start > (bmap -> num_bits))
         return -1;    //non avrò bit disponibili a partire da quel start
 
-    BitMapEntryKey bmapTemp;
+    BitMapEntryKey bmapentry;
     int bit;
     while(start < (bmap -> num_bits)){
-        bmapTemp = BitMap_blockToIndex(start);
+        bmapentry = BitMap_blockToIndex(start);
         //da inserire il valore del bit, ipotesi shift verso destra di bit_num...
         if(bit == status)
             return start;
