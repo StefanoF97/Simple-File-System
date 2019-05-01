@@ -7,7 +7,7 @@ BitMapEntryKey BitMap_blockToIndex(int num){
     
     BitMapEntryKey bmapentry;
     bmapentry.entry_num = num / BITS;   //quanti bytes?
-    bmapentry.bit_num = (char)(num - ((num / BITS) * BITS));   //offset, come se facessi (char)(num % 8)
+    bmapentry.bit_num = (char)(num - ((num / BITS) * BITS));   //offset, come se facessi (char)(num % 8), per posizione del bit
     return bmapentry;
 }
 
@@ -43,19 +43,14 @@ int BitMap_set(BitMap* bmap, int pos, int status){
     
     if (bmap == NULL || pos < 0 || status < 0 || pos >= bmap ->num_bits)
         return -1; 
+
+    BitMapEntryKey appobmap = BitMap_blockToIndex(pos);     //ricavo la entry nella posizione desiderata
+
+    int mask = 1 << appobmap.bit_num;   //sfrutto il solito offset in modo da ottenere la posizione giusta del bit
     
-    int start = 0;
-    BitMapEntryKey bmapentry;
-    while(start < (bmap ->num_bits)){
-        bmapentry = BitMap_blockToIndex(start);
-        if(bmapentry.entry_num + 7 > pos){
-            bmap ->entries[bmapentry.entry_num] |= status << pos;
-            return status;
-        }
-        start++;
-    }
-    
-    return -1;
+    bmap ->entries[appobmap.entry_num] = (bmap ->entries[appobmap.entry_num] & ~mask) | ((status << pos) & mask);
+    return (bmap ->entries[appobmap.entry_num] & ~mask) | ((status << pos) & mask);
+        
 }
 
 
