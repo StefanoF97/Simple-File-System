@@ -7,7 +7,7 @@ BitMapEntryKey BitMap_blockToIndex(int num){
     
     BitMapEntryKey bmapentry;
     bmapentry.entry_num = num / BITS;   //quanti bytes?
-    bmapentry.bit_num = (char)(num - ((num / BITS) * BITS));   //offset
+    bmapentry.bit_num = (char)(num - ((num / BITS) * BITS));   //offset, come se facessi (char)(num % 8)
     return bmapentry;
 }
 
