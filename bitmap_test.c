@@ -51,9 +51,39 @@ int main(int argc, char*argv[]){
     int fourth = BitMap_get(bitmap2, 0, 0);
     
     printf("00000000 00000000 00000000 11111111\n");
-    printf("start = 1 status = 1 %d (Ok se 24)\n", third);
-    printf("start = 0 status = 1 %d (Ok se 0)\n", fourth);
+    printf("start = 1 status = 1 -> %d (Ok se 24)\n", third);
+    printf("start = 0 status = 1 -> %d (Ok se 0)\n", fourth);
     printf("\n");
+
+    free(bitmap2 ->entries);
+    free(bitmap1 ->entries);
+    free(bitmap1);
+    free(bitmap2);
+
+    //Some tests for Bitmap_test
+    BitMap* bitmap3 = (BitMap*)malloc(sizeof(BitMap));
+    bitmap3 ->num_bits = 8;
+    bitmap3 ->entries = (char*)malloc(sizeof(char));
+    bitmap3 ->entries[0] = 255;
+
+    char a = bitmap3 ->entries[0];
+    int i;
+    for (i = 0; i < 8; i++) {
+        printf("%d", !!((a << i) & 0x80));
+    }
+    printf("\n");
+
+    int res = BitMap_set(bitmap3, 0, 0);
+    printf("%d\n", res);
+    
+    a = bitmap3 ->entries[0];
+    for (i = 0; i < 8; i++) {
+        printf("%d", !!((a << i) & 0x80));
+    }
+    printf("\n");
+
+    free(bitmap3 ->entries);
+    free(bitmap3);
 
     return 0;
 }
