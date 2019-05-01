@@ -25,3 +25,4 @@ so_game: simplefs_test.c $(OBJS)
 
 clean:
 	rm -rf *.o *~  $(BINS)
+
