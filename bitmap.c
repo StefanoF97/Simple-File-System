@@ -1,7 +1,7 @@
 #include "bitmap.h"
 #include <string.h>
 #define BITS 8
-#define NULL ((void*) 0)
+//#define NULL ((void*) 0)
 
 BitMapEntryKey BitMap_blockToIndex(int num){
     
@@ -41,10 +41,21 @@ int BitMap_get(BitMap* bmap, int start, int status){
 
 int BitMap_set(BitMap* bmap, int pos, int status){
     
-    if (bmap == NULL || pos < 0 || status < 0)
+    if (bmap == NULL || pos < 0 || status < 0 || pos >= bmap ->num_bits)
         return -1; 
     
-    return 0;
+    int start = 0;
+    BitMapEntryKey bmapentry;
+    while(start < (bmap ->num_bits)){
+        bmapentry = BitMap_blockToIndex(start);
+        if(bmapentry.entry_num + 7 > pos){
+            bmap ->entries[bmapentry.entry_num] |= status << pos;
+            return status;
+        }
+        start++;
+    }
+    
+    return -1;
 }
 
 
