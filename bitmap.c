@@ -38,7 +38,7 @@ int BitMap_get(BitMap* bmap, int start, int status){
 }
 
 int BitMap_set(BitMap* bmap, int pos, int status){
-    
+    return 0;
 }
 
 
