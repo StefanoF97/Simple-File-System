@@ -68,8 +68,8 @@ int main(int argc, char*argv[]){
 
     char a = bitmap3 ->entries[0];
     int i;
-    for (i = 0; i < 8; i++) {
-        printf("%d", !!((a << i) & 0x80));
+    for (i = 7; i >= 0; i--) {
+        printf("%d", !!((a >> i) & 0x01));
     }
     printf("\n");
 
@@ -77,8 +77,8 @@ int main(int argc, char*argv[]){
     printf("%d\n", res);
     
     a = bitmap3 ->entries[0];
-    for (i = 0; i < 8; i++) {
-        printf("%d", !!((a << i) & 0x80));
+    for (i = 7; i >= 0; i--) {
+        printf("%d", !!((a >> i) & 0x01));
     }
     printf("\n");
 
