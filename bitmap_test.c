@@ -66,24 +66,83 @@ int main(int argc, char*argv[]){
     bitmap3 ->entries = (char*)malloc(sizeof(char));
     bitmap3 ->entries[0] = 175;
 
-    char a = bitmap3 ->entries[0];
+    BitMap* bitmap4 = (BitMap*)malloc(sizeof(BitMap));
+    bitmap4 ->num_bits = 32;
+    bitmap4 ->entries = (char*)malloc(sizeof(char) * 4);
+    bitmap4 ->entries[0] = 175;
+    bitmap4 ->entries[1] = 0;
+    bitmap4 ->entries[2] = 85;
+    bitmap4 ->entries[3] = 0;
+
+    BitMap* bitmap5 = (BitMap*)malloc(sizeof(BitMap));
+    bitmap5 ->num_bits = 40;
+    bitmap5 ->entries = (char*)malloc(sizeof(char) * 5);
+    bitmap5 ->entries[0] = 175;
+    bitmap5 ->entries[1] = 0;
+    bitmap5 ->entries[2] = 85;
+    bitmap5 ->entries[3] = 234;
+    bitmap5 ->entries[4] = 8;
+
+    char a;
+    int res;
     int i;
+
+    a = bitmap3 ->entries[0];
+    printf("175 in prima entry, in binario 10101111, setto a 0 il quarto bit\n");
     for (i = 7; i >= 0; i--) {
         printf("%d", !!((a >> i) & 0x01));
     }
     printf("\n");
 
-    int res = BitMap_set(bitmap3, 3, 0);
-    printf("%d\n", res);
+    res = BitMap_set(bitmap3, 3, 0);
+    printf("res: %d\n", res);
     
     a = bitmap3 ->entries[0];
     for (i = 7; i >= 0; i--) {
         printf("%d", !!((a >> i) & 0x01));
     }
+    printf("\n\n");
+
+    a = bitmap4 ->entries[2];
+    printf("85 in seconda entry, in binario 01010101, setto a 0 il primo bit\n");
+    for (i = 7; i >= 0; i--) {
+        printf("%d", !!((a >> i) & 0x01));
+    }
     printf("\n");
+
+    res = BitMap_set(bitmap4, 16, 0);
+    printf("res: %d\n", res);
+    
+    a = bitmap4 ->entries[2];
+    for (i = 7; i >= 0; i--) {
+        printf("%d", !!((a >> i) & 0x01));
+    }
+    printf("\n\n");
+
+    a = bitmap5 ->entries[4];
+    printf("8 in quarta entry, in binario 01010101, setto a 1 il quinto bit\n");
+    for (i = 7; i >= 0; i--) {
+        printf("%d", !!((a >> i) & 0x01));
+    }
+    printf("\n");
+
+    res = BitMap_set(bitmap5, 36, 1);
+    printf("res: %d\n", res);
+    
+    a = bitmap5 ->entries[4];
+    for (i = 7; i >= 0; i--) {
+        printf("%d", !!((a >> i) & 0x01));
+    }
+    printf("\n\n");
 
     free(bitmap3 ->entries);
     free(bitmap3);
+
+    free(bitmap4 ->entries);
+    free(bitmap4);
+
+    free(bitmap5 ->entries);
+    free(bitmap5);
 
     return 0;
 }
