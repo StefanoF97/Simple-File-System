@@ -1,5 +1,6 @@
 #include "bitmap.h"
 #include <string.h>
+#include <math.h>
 #define BITS 8
 //#define NULL ((void*) 0)
 
@@ -44,12 +45,12 @@ int BitMap_set(BitMap* bmap, int pos, int status){
     if (bmap == NULL || pos < 0 || status < 0 || pos >= bmap ->num_bits)
         return -1; 
 
-    BitMapEntryKey appobmap = BitMap_blockToIndex(pos);     //ricavo la entry nella posizione desiderata
+    BitMapEntryKey appobmap = BitMap_blockToIndex(pos);     //ricavo la entry nella posizione desiderata senza bisogno di un ciclo
 
     int mask = 1 << appobmap.bit_num;   //sfrutto il solito offset in modo da ottenere la posizione giusta del bit
     
     bmap ->entries[appobmap.entry_num] = (bmap ->entries[appobmap.entry_num] & ~mask) | ((status << pos) & mask);
-    return (bmap ->entries[appobmap.entry_num] & ~mask) | ((status << pos) & mask);
+    return abs((bmap ->entries[appobmap.entry_num] & ~mask) | ((status << pos) & mask));
         
 }
 
