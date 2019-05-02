@@ -2,8 +2,10 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <unistd.h>
+#include <sys/stat.h>
 #include <fcntl.h>
 #include <sys/mman.h>
+#include <string.h>
 
 void DiskDriver_init(DiskDriver* disk, const char* filename, int num_blocks){
 
@@ -24,21 +26,32 @@ void DiskDriver_init(DiskDriver* disk, const char* filename, int num_blocks){
             return;
         }
 
-        DiskHeader* header = (DiskHeader*)mmap(0, sizeof(DiskHeader) + bmap_size, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);  //mappo sul file in ingresso memoria virtuale
+        DiskHeader* header = (DiskHeader*)mmap(NULL, sizeof(DiskHeader) + bmap_size, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);  //mappo sul file in ingresso memoria virtuale
         if(header == MAP_FAILED){
             printf("Mappatura su file non riuscita...ritentare\n");
             close(fd);
             return;
         }
-
+        
+        header ->num_blocks = num_blocks;
+        header ->bitmap_blocks = num_blocks;
+        header ->bitmap_entries = bmap_size;
+        header ->first_free_block = 0;
+        header ->free_blocks = num_blocks;
+        
         disk ->header = header;
         disk ->bitmap_data = sizeof(DiskHeader) + (char*)header;
         disk ->fd = fd;
+
+        int i = 0;
+        while(i < strlen(disk -> bitmap_data)){    //inizializzo a zero bitmap_data
+            disk ->bitmap_data[i] = 0;
+            i++;
+        }
+        
     }
-    else{
-        //caso in cui il file non è accessibile...dovrò aprirlo io e ri-mmappare
+    else
+    {
+        return;
     }
-    
-    
-    
 }
