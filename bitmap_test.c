@@ -64,7 +64,7 @@ int main(int argc, char*argv[]){
     BitMap* bitmap3 = (BitMap*)malloc(sizeof(BitMap));
     bitmap3 ->num_bits = 8;
     bitmap3 ->entries = (char*)malloc(sizeof(char));
-    bitmap3 ->entries[0] = 255;
+    bitmap3 ->entries[0] = 175;
 
     char a = bitmap3 ->entries[0];
     int i;
@@ -73,7 +73,7 @@ int main(int argc, char*argv[]){
     }
     printf("\n");
 
-    int res = BitMap_set(bitmap3, 0, 0);
+    int res = BitMap_set(bitmap3, 3, 0);
     printf("%d\n", res);
     
     a = bitmap3 ->entries[0];
