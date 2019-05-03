@@ -89,7 +89,8 @@ int DiskDriver_readBlock(DiskDriver* disk, void* dest, int block_num){
 
         if(ret == -1 && errno == EINTR)
             continue;
-        else{
+        
+        if(ret == -1){
             printf("errore in lettura\n");
             return;
         }
