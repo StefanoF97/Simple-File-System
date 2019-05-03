@@ -1,4 +1,5 @@
 #include "disk_driver.h"
+#include "bitmap.h"
 #include <stdlib.h>
 #include <stdio.h>
 #include <unistd.h>
@@ -18,7 +19,7 @@ void DiskDriver_init(DiskDriver* disk, const char* filename, int num_blocks){
     if (bmap_size % 8 != 0)            //inserisco eventualmente dei bit in più per creare almeno un blocco(o eventualmente per creare un blocco in più in caso num_blocks %8 != 0)
         bmap_size += 1;
     
-    if (access(filename, F_OK)){
+    if (!access(filename, F_OK)){
         
         int fd = open(filename, O_RDWR, 0666);
         if(fd == -1){
@@ -50,8 +51,39 @@ void DiskDriver_init(DiskDriver* disk, const char* filename, int num_blocks){
         }
         
     }
-    else
-    {
+    else{
         return;
     }
+}
+
+int DiskDriver_readBlock(DiskDriver* disk, void* dest, int block_num){
+
+    if(disk == NULL || disk ->header ->bitmap_blocks < block_num || block_num < 0){
+        return -1;
+    }
+
+    BitMap bmap;                                    //sfrutto le funzioni che ho scritto per la BitMap
+    bmap.entries = disk ->bitmap_data;
+    bmap.num_bits = disk ->header ->bitmap_blocks;
+
+    BitMapEntryKey bmapentry = BitMap_blockToIndex(block_num);
+    if((bmap.entries[bmapentry.entry_num] >> (bmapentry.bit_num) & 0x01) == 0)
+        return -1;   //non c'è nulla da leggere (è vuoto il blocco)
+
+    //SEEK_SET = offset e' aggiunto dall'inizio del file -> per le funzioni di read/write
+    //devo cercare nel fs dopo lo spazio occupato dalla bitmap.
+    int offset = lseek(disk ->fd, sizeof(DiskHeader) + (disk ->header ->bitmap_entries) + (block_num * BLOCK_SIZE), SEEK_SET);  
+    if(offset == -1){
+        printf("lseek fallita\n");
+        return;
+    }
+
+    int ret; 
+    int read_bytes = 0;
+    while(read_bytes < BLOCK_SIZE){         
+        //grazie alla lseek sono già posizionato nel punto dove devo leggere 
+        //da finire normale funzione di lettura
+
+    }
+
 }
