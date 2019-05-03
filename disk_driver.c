@@ -3,7 +3,9 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <unistd.h>
+#include <errno.h>
 #include <sys/stat.h>
+#include <sys/types.h>
 #include <fcntl.h>
 #include <sys/mman.h>
 #include <string.h>
@@ -71,7 +73,7 @@ int DiskDriver_readBlock(DiskDriver* disk, void* dest, int block_num){
         return -1;   //non c'è nulla da leggere (è vuoto il blocco)
 
     //SEEK_SET = offset e' aggiunto dall'inizio del file -> per le funzioni di read/write
-    //devo cercare nel fs dopo lo spazio occupato dalla bitmap.
+    //devo cercare nel fs dopo lo spazio occupato dalla bitmap (e dal DiskHeader).
     int offset = lseek(disk ->fd, sizeof(DiskHeader) + (disk ->header ->bitmap_entries) + (block_num * BLOCK_SIZE), SEEK_SET);  
     if(offset == -1){
         printf("lseek fallita\n");
@@ -83,7 +85,24 @@ int DiskDriver_readBlock(DiskDriver* disk, void* dest, int block_num){
     while(read_bytes < BLOCK_SIZE){         
         //grazie alla lseek sono già posizionato nel punto dove devo leggere 
         //da finire normale funzione di lettura
+        ret = read(disk ->fd, dest + read_bytes, BLOCK_SIZE - read_bytes);
 
+        if(ret == -1 && errno == EINTR)
+            continue;
+        else{
+            printf("errore in lettura\n");
+            return;
+        }
+        
+        if(ret == 0)
+            break;
+
+        read_bytes += ret;
     }
 
+    return 0;       //se ritorna 0 significa che tutto è andato bene
+}
+
+int DiskDriver_writeBlock(DiskDriver* disk, void* src, int block_num){
+    
 }
