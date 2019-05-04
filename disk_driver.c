@@ -1,5 +1,4 @@
 #include "disk_driver.h"
-#include "bitmap.h"
 #include <stdlib.h>
 #include <stdio.h>
 #include <unistd.h>
@@ -157,3 +156,10 @@ int DiskDriver_writeBlock(DiskDriver* disk, void* src, int block_num){
     return 0;   //se si ritorna 0 è andato tutto bene
 
 }
+
+int DiskDriver_getFreeBlock(DiskDriver* disk, int start){
+    //posso sicuramente sfruttare la bitmap_get ponendo status = 0, in questo modo
+    //mi restituirà la posizione del primo blocco che ha bit = status(0 in questo caso)
+}
+
+
