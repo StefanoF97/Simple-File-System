@@ -136,7 +136,9 @@ int DiskDriver_writeBlock(DiskDriver* disk, void* src, int block_num){
 
     disk ->header ->free_blocks -= 1;
 
-    disk ->header ->first_free_block = DiskDriver_getFreeBlock(disk, block_num + 1);    //parto da block_num + 1 a cercare un nuovo blocco libero
+    if(disk ->header ->first_free_block == block_num)   //in realtà, vado a modificare first_free_block solo se block_num è uguale a disk ->header ->first_free_block, 
+                                                        //altrimenti lo lascio inalterato
+        disk ->header ->first_free_block = DiskDriver_getFreeBlock(disk, block_num + 1);    //parto da block_num + 1 a cercare un nuovo blocco libero
 
     BitMap_set(&bmap, block_num, 1);
 
