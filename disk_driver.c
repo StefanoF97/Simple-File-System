@@ -124,7 +124,7 @@ int DiskDriver_writeBlock(DiskDriver* disk, void* src, int block_num){
         return -1;   
     }
 
-    //come nella readBlock, sfrutto lseek per far "puntare" il file descriptor al blocco da scrivere
+    //come nella readBlock...sfrutto lseek per far "puntare" il file descriptor al blocco da scrivere
     int offset = lseek(disk ->fd, sizeof(DiskHeader) + (disk ->header ->bitmap_entries) + (block_num * BLOCK_SIZE), SEEK_SET);
     if(offset == -1){
         printf("Errore in lseek (in DiskDriver_writeBlock )\n");
