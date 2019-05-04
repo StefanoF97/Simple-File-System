@@ -1,4 +1,5 @@
 #include "disk_driver.h"
+#include "bitmap.h"
 #include <stdlib.h>
 #include <stdio.h>
 #include <unistd.h>
@@ -22,6 +23,7 @@ void DiskDriver_init(DiskDriver* disk, const char* filename, int num_blocks){
     
     if (!access(filename, F_OK)){
         
+        printf("entrato\n");
         int fd = open(filename, O_RDWR, 0666);
         if(fd == -1){
             printf("Error in opening file!\n");
@@ -34,7 +36,7 @@ void DiskDriver_init(DiskDriver* disk, const char* filename, int num_blocks){
             close(fd);
             return;
         }
-        
+
         header ->num_blocks = num_blocks;
         header ->bitmap_blocks = num_blocks;
         header ->bitmap_entries = bmap_size;
@@ -46,15 +48,17 @@ void DiskDriver_init(DiskDriver* disk, const char* filename, int num_blocks){
         disk ->fd = fd;
 
         int i = 0;
-        while(i < strlen(disk -> bitmap_data)){    //inizializzo a zero bitmap_data
+        while(i < disk ->header ->bitmap_blocks){    //inizializzo a zero bitmap_data
             disk ->bitmap_data[i] = 0;
             i++;
         }
         
     }
     else{
+        printf("Init non riuscita :/\n");
         return;
     }
+    printf("Init avvenuta correttamente\n");
 }
 
 int DiskDriver_readBlock(DiskDriver* disk, void* dest, int block_num){
@@ -79,7 +83,7 @@ int DiskDriver_readBlock(DiskDriver* disk, void* dest, int block_num){
     int offset = lseek(disk ->fd, sizeof(DiskHeader) + (disk ->header ->bitmap_entries) + (block_num * BLOCK_SIZE), SEEK_SET);  
     if(offset == -1){
         printf("Errore in lseek (in DiskDriver_readBlock )\n");
-        return;
+        return -1;
     }
 
     int ret; 
@@ -184,5 +188,7 @@ int DiskDriver_getFreeBlock(DiskDriver* disk, int start){
     return position;
 
 }
+
+
 
 
