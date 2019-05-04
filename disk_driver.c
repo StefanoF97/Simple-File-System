@@ -21,43 +21,44 @@ void DiskDriver_init(DiskDriver* disk, const char* filename, int num_blocks){
     if (bmap_size % 8 != 0)            //inserisco eventualmente dei bit in più per creare almeno un blocco(o eventualmente per creare un blocco in più in caso num_blocks %8 != 0)
         bmap_size += 1;
     
+    int fd;
     if (!access(filename, F_OK)){
         
-        printf("entrato\n");
-        int fd = open(filename, O_RDWR, 0666);
+        printf("entrato 1\n");
+        fd = open(filename, O_RDWR, 0666);
         if(fd == -1){
             printf("Error in opening file!\n");
             return;
         }
 
-        DiskHeader* header = (DiskHeader*)mmap(NULL, sizeof(DiskHeader) + bmap_size, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);  //mappo sul file in ingresso memoria virtuale
+        DiskHeader* header = (DiskHeader*)mmap(0, sizeof(DiskHeader) + bmap_size, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);  //mappo sul file in ingresso memoria virtuale
         if(header == MAP_FAILED){
             printf("Mappatura su file non riuscita...ritentare\n");
             close(fd);
             return;
         }
 
+        disk ->header = header;
+        disk ->bitmap_data = sizeof(DiskHeader) + (char*)header;
+        disk ->fd = fd;
+        
         header ->num_blocks = num_blocks;
         header ->bitmap_blocks = num_blocks;
         header ->bitmap_entries = bmap_size;
         header ->first_free_block = 0;
         header ->free_blocks = num_blocks;
-        
-        disk ->header = header;
-        disk ->bitmap_data = sizeof(DiskHeader) + (char*)header;
-        disk ->fd = fd;
 
         int i = 0;
-        while(i < disk ->header ->bitmap_blocks){    //inizializzo a zero bitmap_data
+        while(i < header ->bitmap_entries){    //inizializzo a zero bitmap_data
             disk ->bitmap_data[i] = 0;
             i++;
         }
-        
     }
     else{
-        printf("Init non riuscita :/\n");
+        printf("File cannot be accessed\n");
         return;
     }
+    
     printf("Init avvenuta correttamente\n");
 }
 
