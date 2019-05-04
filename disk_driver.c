@@ -60,7 +60,8 @@ void DiskDriver_init(DiskDriver* disk, const char* filename, int num_blocks){
 
 int DiskDriver_readBlock(DiskDriver* disk, void* dest, int block_num){
 
-    if(disk == NULL || disk ->header ->bitmap_blocks < block_num || block_num < 0){
+    if(disk == NULL || disk ->header ->bitmap_blocks < block_num || block_num < 0 || dest == NULL){
+        printf("Parametri passati a DiskDriver_readBlock non conformi\n");
         return -1;
     }
 
@@ -69,14 +70,16 @@ int DiskDriver_readBlock(DiskDriver* disk, void* dest, int block_num){
     bmap.num_bits = disk ->header ->bitmap_blocks;
 
     BitMapEntryKey bmapentry = BitMap_blockToIndex(block_num);
-    if((bmap.entries[bmapentry.entry_num] >> (bmapentry.bit_num) & 0x01) == 0)
-        return -1;   //non c'è nulla da leggere (è vuoto il blocco)
+    if((bmap.entries[bmapentry.entry_num] >> (bmapentry.bit_num) & 0x01) == 0){
+        printf("Blocco da leggere vuoto, nulla da leggere\n");
+        return -1;   
+    }
 
     //SEEK_SET = offset e' aggiunto dall'inizio del file -> per le funzioni di read/write
     //devo cercare nel fs dopo lo spazio occupato dalla bitmap (e dal DiskHeader).
     int offset = lseek(disk ->fd, sizeof(DiskHeader) + (disk ->header ->bitmap_entries) + (block_num * BLOCK_SIZE), SEEK_SET);  
     if(offset == -1){
-        printf("lseek fallita\n");
+        printf("Errore in lseek (in DiskDriver_readBlock )\n");
         return;
     }
 
@@ -92,7 +95,7 @@ int DiskDriver_readBlock(DiskDriver* disk, void* dest, int block_num){
         
         if(ret == -1){
             printf("errore in lettura\n");
-            return;
+            return -1;
         }
         
         if(ret == 0)
@@ -106,4 +109,51 @@ int DiskDriver_readBlock(DiskDriver* disk, void* dest, int block_num){
 
 int DiskDriver_writeBlock(DiskDriver* disk, void* src, int block_num){
     
+    if(disk == NULL || disk ->header ->bitmap_blocks < block_num || block_num < 0 || src == NULL){
+        printf("parametri passati a DiskDriver_writeBlock non conformi\n");
+        return -1;
+    }
+
+    BitMap bmap;
+    bmap.entries = disk ->bitmap_data;
+    bmap.num_bits = disk ->header ->bitmap_blocks;
+
+    BitMapEntryKey bmapentry = BitMap_blockToIndex(block_num);
+    if((bmap.entries[bmapentry.entry_num] >> (bmapentry.bit_num) & 0x01) == 1){
+        printf("Blocco da scrivere occupato, impossibile sovrascriverlo\n");
+        return -1;   
+    }
+
+    //come nella readBlock, sfrutto lseek per far "puntare" il file descriptor al blocco da scrivere
+    int offset = lseek(disk ->fd, sizeof(DiskHeader) + (disk ->header ->bitmap_entries) + (block_num * BLOCK_SIZE), SEEK_SET);
+    if(offset == -1){
+        printf("Errore in lseek (in DiskDriver_writeBlock )\n");
+        return -1;
+    }
+
+    //in questo spazio devo aggiornare sia il numero di blocchi liberi(va decrementato perchè sto scrivendo un blocco libero) e
+    //sia inserire in first_free_block un nuovo indice dato che in sostanza sto scrivendo proprio in first_free_block
+
+    int ret;
+    int written_bytes = 0;
+    while (written_bytes < BLOCK_SIZE){
+        
+        ret = write(disk ->fd, src + written_bytes, BLOCK_SIZE - written_bytes);
+
+        if(ret == -1 && errno == EINTR)
+            continue;
+        
+        if(ret == -1){
+            printf("Errore in scrittura\n");
+            return -1;
+        }
+
+        if(ret == 0)
+            break;
+        
+        written_bytes += ret;
+    }
+    
+    return 0;   //se si ritorna 0 è andato tutto bene
+
 }
