@@ -131,7 +131,14 @@ int DiskDriver_writeBlock(DiskDriver* disk, void* src, int block_num){
     }
 
     //in questo spazio devo aggiornare sia il numero di blocchi liberi(va decrementato perchè sto scrivendo un blocco libero) e
-    //sia inserire in first_free_block un nuovo indice dato che in sostanza sto scrivendo proprio in first_free_block
+    //sia inserire in first_free_block un nuovo indice;
+    //settare a 1 la bitmap in posizione block_num
+
+    disk ->header ->free_blocks -= 1;
+
+    disk ->header ->first_free_block = DiskDriver_getFreeBlock(disk, block_num + 1);    //parto da block_num + 1 a cercare un nuovo blocco libero
+
+    BitMap_set(&bmap, block_num, 1);
 
     int ret;
     int written_bytes = 0;
@@ -160,6 +167,20 @@ int DiskDriver_writeBlock(DiskDriver* disk, void* src, int block_num){
 int DiskDriver_getFreeBlock(DiskDriver* disk, int start){
     //posso sicuramente sfruttare la bitmap_get ponendo status = 0, in questo modo
     //mi restituirà la posizione del primo blocco che ha bit = status(0 in questo caso)
+
+    if(disk == NULL || start < 0 || disk ->header ->bitmap_blocks < start){
+        printf("Parametri passati a DiskDriver_getFreeBlock non conformi\n");
+        return -1;
+    }
+
+    BitMap bmap;
+    bmap.entries = disk ->bitmap_data;
+    bmap.num_bits = disk ->header ->bitmap_blocks;
+
+    int position = BitMap_get(&bmap, start, 0);
+
+    return position;
+
 }
 
 
