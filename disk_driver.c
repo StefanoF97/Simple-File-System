@@ -196,6 +196,19 @@ int DiskDriver_getFreeBlock(DiskDriver* disk, int start){
 
 int DiskDriver_flush(DiskDriver* disk){
     
+    if(disk == NULL){
+        printf("cannot flushing, Diskdriver is null\n");
+        return -1;
+    }
+
+    int ret = msync(disk ->header, sizeof(DiskHeader) + disk ->header ->bitmap_entries, MS_SYNC);   //msynch flushes memory mmapped on header
+
+    if(ret == -1){
+        printf("Error in msync\n");
+        return -1;
+    }
+
+    return 0;
 }
 
 
