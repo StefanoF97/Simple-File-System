@@ -24,7 +24,6 @@ void DiskDriver_init(DiskDriver* disk, const char* filename, int num_blocks){
     int fd;
     if (!access(filename, F_OK)){
         
-        printf("entrato 1\n");
         fd = open(filename, O_RDWR, 0666);
         if(fd == -1){
             printf("Error in opening file!\n");
@@ -193,6 +192,10 @@ int DiskDriver_getFreeBlock(DiskDriver* disk, int start){
 
     return position;
 
+}
+
+int DiskDriver_flush(DiskDriver* disk){
+    
 }
 
 
