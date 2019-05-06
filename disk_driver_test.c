@@ -27,6 +27,9 @@ int main(int argc, char* argv[]){
     }
     printf("\n");
 
+    if(!DiskDriver_flush(diskdriver))
+        printf("Flushing with success\n");
+
     free(diskdriver);
 
     return 0;
