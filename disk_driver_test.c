@@ -14,28 +14,19 @@ int main(int argc, char* argv[]){
     printf("first_free_block :%d\n", diskdriver ->header ->first_free_block);
     printf("free_blocks: %d\n", diskdriver ->header ->free_blocks);
     printf("num_blocks: %d\n", diskdriver ->header ->num_blocks);
-
-    int i = 0;
+    printf("bitmap_data: ");
 
     BitMap bmap;
     bmap.entries = diskdriver ->bitmap_data;
     bmap.num_bits = diskdriver ->header ->bitmap_blocks;
 
-    int a = bmap.entries[0];
-    
-    printf("primo blocco: ");
-    for (i = 7; i >= 0; i--) {
-        printf("%d", !!((a >> i) & 0x01));
+    int i;
+
+    for(i = 0; i < diskdriver ->header ->bitmap_blocks; i++){
+        printf("%d", diskdriver ->bitmap_data[i]);
     }
     printf("\n");
 
-    a = bmap.entries[1];
-    printf("secondo blocco: ");
-    for (i = 7; i >= 0; i--) {
-        printf("%d", !!((a >> i) & 0x01));
-    }
-    printf("\n");
-    
     free(diskdriver);
 
     return 0;
