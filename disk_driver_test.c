@@ -30,6 +30,8 @@ int main(int argc, char* argv[]){
     if(!DiskDriver_flush(diskdriver))
         printf("Flushing with success\n");
 
+    //Started test from here...
+    
     free(diskdriver);
 
     return 0;
