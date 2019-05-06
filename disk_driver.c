@@ -9,6 +9,8 @@
 #include <fcntl.h>
 #include <sys/mman.h>
 #include <string.h>
+#include <sys/syscall.h>
+#include <linux/falloc.h>
 
 void DiskDriver_init(DiskDriver* disk, const char* filename, int num_blocks){
 
@@ -18,8 +20,6 @@ void DiskDriver_init(DiskDriver* disk, const char* filename, int num_blocks){
     }
 
     int bmap_size = num_blocks / 8;    //dato che si fa in modo che ogni blocco abbia 8 bit, ho bisogno di sapere il numero di entry
-    if (bmap_size % 8 != 0)            //inserisco eventualmente dei bit in più per creare almeno un blocco(o eventualmente per creare un blocco in più in caso num_blocks %8 != 0)
-        bmap_size += 1;
     
     int fd;
     if (!access(filename, F_OK)){
@@ -28,6 +28,11 @@ void DiskDriver_init(DiskDriver* disk, const char* filename, int num_blocks){
         fd = open(filename, O_RDWR, 0666);
         if(fd == -1){
             printf("Error in opening file!\n");
+            return;
+        }
+
+        if(posix_fallocate(fd, 0, sizeof(DiskHeader)+bmap_size) != 0){        //ho dovuto inserire l'allocazione del file per evitare l'errore "Errore di bus(core dump creato)"
+            printf("Errore nella allocazione del file\n");
             return;
         }
 
@@ -49,7 +54,7 @@ void DiskDriver_init(DiskDriver* disk, const char* filename, int num_blocks){
         header ->free_blocks = num_blocks;
 
         int i = 0;
-        while(i < header ->bitmap_entries){    //inizializzo a zero bitmap_data
+        while(i < header ->bitmap_blocks){    //inizializzo a zero bitmap_data
             disk ->bitmap_data[i] = 0;
             i++;
         }
