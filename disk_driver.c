@@ -211,6 +211,9 @@ int DiskDriver_flush(DiskDriver* disk){
     return 0;
 }
 
+int DiskDriver_freeBlock(DiskDriver* disk, int block_num){
+    return 0;
+}
 
 
 
