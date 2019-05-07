@@ -16,10 +16,6 @@ int main(int argc, char* argv[]){
     printf("num_blocks: %d\n", diskdriver ->header ->num_blocks);
     printf("bitmap_data: ");
 
-    BitMap bmap;
-    bmap.entries = diskdriver ->bitmap_data;
-    bmap.num_bits = diskdriver ->header ->bitmap_blocks;
-
     int i;
 
     for(i = 0; i < diskdriver ->header ->bitmap_blocks; i++){
@@ -31,6 +27,7 @@ int main(int argc, char* argv[]){
         printf("Flushing with success\n");
 
     //Started test from here...
+
     
     free(diskdriver);
 
