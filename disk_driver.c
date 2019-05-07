@@ -212,6 +212,23 @@ int DiskDriver_flush(DiskDriver* disk){
 }
 
 int DiskDriver_freeBlock(DiskDriver* disk, int block_num){
+    
+    if(disk == NULL || block_num < 0){
+        printf("Cannot free block because wrong parameters\n");
+        return -1;
+    }
+
+    BitMap bmap;
+    bmap.entries = disk ->bitmap_data;
+    bmap.num_bits = disk ->header ->bitmap_blocks;
+
+    int ret = BitMap_set(&bmap, block_num, 0);
+
+    if(ret == -1){
+        printf("Error in Bitmap_set when trying fo free block\n");
+        return -1;
+    }
+    
     return 0;
 }
 
