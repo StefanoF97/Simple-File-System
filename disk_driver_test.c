@@ -81,6 +81,55 @@ int main(int argc, char* argv[]){
     printf("first_free_block :%d\n", diskdriver ->header ->first_free_block);
     printf("Success\n\n\n");
 
+    printf("I'm writing third FileBlock(flb3) in disk in position 2\n");
+    if(DiskDriver_writeBlock(diskdriver, &flb3, 2) == -1){
+        printf("Error in writing block 2 of flb3\n");
+        return -1;
+    }
+    DiskDriver_flush(diskdriver);
+    printf("Bitmap in posizione 2: %d\n", diskdriver ->bitmap_data[2]);
+    printf("free_blocks: %d\n", diskdriver ->header ->free_blocks);
+    printf("first_free_block :%d\n", diskdriver ->header ->first_free_block);
+    printf("Success\n\n\n");
+
+    printf("I'm writing third FileBlock(flb3) in disk in position 0\n");
+    if(DiskDriver_writeBlock(diskdriver, &flb3, 0) == -1){
+        printf("Error in writing block 0 of flb3\n");
+        printf("Success\n\n\n");
+
+    }
+    DiskDriver_flush(diskdriver);
+
+    //Trying to read something on the disk
+    char arr1[BLOCK_SIZE - sizeof(BlockHeader)];
+    char arr2[BLOCK_SIZE - sizeof(BlockHeader)];
+    char arr3[BLOCK_SIZE - sizeof(BlockHeader)];
+
+    if(DiskDriver_readBlock(diskdriver, arr1, 0) != -1){
+        printf("%s ", arr1);
+        printf("\n\n\n");
+    }
+    else{
+        printf("Nothing to write, free space in that position\n");
+    }
+
+    if(DiskDriver_readBlock(diskdriver, arr2, 1) != -1){
+        
+        printf("%s", arr2);
+        printf("\n\n\n");
+    }
+    else{
+        printf("Nothing to write, free space in that position\n");
+    }
+
+    if(DiskDriver_readBlock(diskdriver, arr3, 2) != -1){
+        printf("%s ", arr3);
+        printf("\n\n\n");
+    }
+    else{
+        printf("Nothing to write, free space in that position\n");
+    }
+    
     free(diskdriver);
 
     return 0;
