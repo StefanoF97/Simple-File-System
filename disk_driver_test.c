@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include "disk_driver.h"
 #include "simplefs.h"
 
@@ -37,19 +38,25 @@ int main(int argc, char* argv[]){
 
     FileBlock flb1;
     flb1.header = blockheader;
+    char fb1[BLOCK_SIZE - sizeof(BlockHeader)];             //must use a temp char[] to memorize the data and after use strcpy to copy them in flbt ->data
+    for(i = 0; i < BLOCK_SIZE - sizeof(BlockHeader); i++)   //strcpy copy in a correct way the data, without strcpy i got an error: "Address 0x522d6e0 is 0 bytes after a block of size 512 alloc'd"
+        fb1[i] = '7';
+    strcpy(flb1.data, fb1);
     
-    for(i = 0; i < BLOCK_SIZE - sizeof(BlockHeader); i++)
-        flb1.data[i] = 7;
     
     FileBlock flb2;
     flb2.header = blockheader;
+    char fb2[BLOCK_SIZE - sizeof(BlockHeader)];
     for(i = 0; i < BLOCK_SIZE - sizeof(BlockHeader); i++)
-        flb2.data[i] = 1;
+        fb2[i] = '1';
+    strcpy(flb2.data, fb2);
     
     FileBlock flb3;
     flb3.header = blockheader;
+    char fb3[BLOCK_SIZE - sizeof(BlockHeader)];
     for(i = 0; i < BLOCK_SIZE - sizeof(BlockHeader); i++)
-        flb3.data[i] = 1;
+        fb3[i] = '5';
+    strcpy(flb3.data, fb3);
 
     //Trying to write something on the disk starting from fileblock
     printf("I'm writing first FileBlock(flb1) in disk in position 0\n");
@@ -101,19 +108,23 @@ int main(int argc, char* argv[]){
     DiskDriver_flush(diskdriver);
 
     //Trying to read something on the disk
-    char arr1[BLOCK_SIZE];
-    char arr2[BLOCK_SIZE];
-    char arr3[BLOCK_SIZE];
+    //char arr1[BLOCK_SIZE];    cannot use them, must using a struct FileBlock 
+    //char arr2[BLOCK_SIZE];
+    //char arr3[BLOCK_SIZE];
 
+    FileBlock* flbt = (FileBlock*) malloc(sizeof(FileBlock));
+    flbt ->header = blockheader;
+    
     printf("leggo in posizione 0\n");
-    if(DiskDriver_readBlock(diskdriver, &arr1, 0) != -1){
-        printf("Dati: %s\n", arr1);
+    if(DiskDriver_readBlock(diskdriver, flbt ->data, 0) != -1){
+        printf("%s\n", flbt ->data);
         printf("Success\n\n\n");
     }
     else{
         printf("free space or incorrect position\n");
         printf("Insuccess\n\n\n");    }
 
+    /*
     printf("leggo in posizione 1\n");
     if(DiskDriver_readBlock(diskdriver, &arr2, 1) != -1){
         printf("Dati: %s\n", arr2);
@@ -123,7 +134,8 @@ int main(int argc, char* argv[]){
         printf("free space or incorrect position\n");
         printf("Insuccess\n\n\n");
     }
-
+    */
+    /*
     printf("leggo in posizione 2\n");
     if(DiskDriver_readBlock(diskdriver, &arr3, 2) != -1){
         printf("Dati: %s\n", arr3);
@@ -133,7 +145,8 @@ int main(int argc, char* argv[]){
         printf("free space or incorrect position\n");
         printf("Insuccess\n\n\n");
     }
-
+    */
+    /*
     printf("leggo in posizione 3\n");
     if(DiskDriver_readBlock(diskdriver, &arr1, 3) != -1){
         printf("Dati: %s\n", arr3);
@@ -143,7 +156,7 @@ int main(int argc, char* argv[]){
         printf("free space or incorrect position\n");
         printf("Success\n\n\n");
     }
-
+    */
     //Try getFreeBlock function and FreeBLock
     int ret;
 
@@ -178,6 +191,7 @@ int main(int argc, char* argv[]){
     }
     
     DiskDriver_flush(diskdriver);
+    free(flbt);
     free(diskdriver);
 
     return 0;
