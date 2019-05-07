@@ -47,7 +47,7 @@ void DiskDriver_init(DiskDriver* disk, const char* filename, int num_blocks){
         }
 
         disk ->header = header;
-        disk ->bitmap_data = sizeof(DiskHeader) + (char*)header;
+        disk ->bitmap_data = (char*)header + sizeof(DiskHeader);
         disk ->fd = fd;
         
         header ->num_blocks = num_blocks;
