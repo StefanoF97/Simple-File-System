@@ -101,35 +101,83 @@ int main(int argc, char* argv[]){
     DiskDriver_flush(diskdriver);
 
     //Trying to read something on the disk
-    char arr1[BLOCK_SIZE - sizeof(BlockHeader)];
-    char arr2[BLOCK_SIZE - sizeof(BlockHeader)];
-    char arr3[BLOCK_SIZE - sizeof(BlockHeader)];
+    char arr1[BLOCK_SIZE];
+    char arr2[BLOCK_SIZE];
+    char arr3[BLOCK_SIZE];
 
-    if(DiskDriver_readBlock(diskdriver, arr1, 0) != -1){
-        printf("%s ", arr1);
-        printf("\n\n\n");
+    printf("leggo in posizione 0\n");
+    if(DiskDriver_readBlock(diskdriver, &arr1, 0) != -1){
+        printf("Dati: %s\n", arr1);
+        printf("Success\n\n\n");
     }
     else{
-        printf("Nothing to write, free space in that position\n");
-    }
+        printf("free space or incorrect position\n");
+        printf("Insuccess\n\n\n");    }
 
-    if(DiskDriver_readBlock(diskdriver, arr2, 1) != -1){
-        
-        printf("%s", arr2);
-        printf("\n\n\n");
+    printf("leggo in posizione 1\n");
+    if(DiskDriver_readBlock(diskdriver, &arr2, 1) != -1){
+        printf("Dati: %s\n", arr2);
+        printf("Success\n\n\n");
     }
     else{
-        printf("Nothing to write, free space in that position\n");
+        printf("free space or incorrect position\n");
+        printf("Insuccess\n\n\n");
     }
 
-    if(DiskDriver_readBlock(diskdriver, arr3, 2) != -1){
-        printf("%s ", arr3);
-        printf("\n\n\n");
+    printf("leggo in posizione 2\n");
+    if(DiskDriver_readBlock(diskdriver, &arr3, 2) != -1){
+        printf("Dati: %s\n", arr3);
+        printf("Success\n\n\n");
     }
     else{
-        printf("Nothing to write, free space in that position\n");
+        printf("free space or incorrect position\n");
+        printf("Insuccess\n\n\n");
+    }
+
+    printf("leggo in posizione 3\n");
+    if(DiskDriver_readBlock(diskdriver, &arr1, 3) != -1){
+        printf("Dati: %s\n", arr3);
+        printf("Insuccess\n\n\n");
+    }
+    else{
+        printf("free space or incorrect position\n");
+        printf("Success\n\n\n");
+    }
+
+    //Try getFreeBlock function and FreeBLock
+    int ret;
+
+    printf("Provo a ottenere un blocco libero(sono finiti..)\n");
+    if((ret = DiskDriver_getFreeBlock(diskdriver, 0)) != -1){
+        printf("free space at position: %d\n", ret);
+        printf("Insuccess\n\n\n");
+    }
+    else{
+        printf("Sorry but there aren't free space anymore\n");
+        printf("Success\n\n\n");
+    }
+
+    printf("Libero memoria in posizione 0\n");
+    if((ret = DiskDriver_freeBlock(diskdriver, 0)) != -1){
+        printf("freed space at position: %d\n", ret);
+        printf("Success\n\n\n");
+    }
+    else{
+        printf("Cannot free space at position 0\n");
+        printf("Insuccess\n\n\n");
+    }
+
+    printf("Riprovo a ottenere un blocco libero\n");
+    if((ret = DiskDriver_getFreeBlock(diskdriver, 0)) != -1){
+        printf("free space at position: %d\n", ret);
+        printf("Success\n\n\n");
+    }
+    else{
+        printf("Sorry but there aren't free space anymore\n");
+        printf("Insuccess\n\n\n");
     }
     
+    DiskDriver_flush(diskdriver);
     free(diskdriver);
 
     return 0;
