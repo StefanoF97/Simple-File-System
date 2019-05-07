@@ -20,7 +20,11 @@ void DiskDriver_init(DiskDriver* disk, const char* filename, int num_blocks){
     }
 
     int bmap_size = num_blocks / 8;    //dato che si fa in modo che ogni blocco abbia 8 bit, ho bisogno di sapere il numero di entry
-    
+
+    if(bmap_size == 0){     //when testing, bitmap_entries == 0 but it's an error...if num_blocks less than eight, anyway i need an entry(bmap_size = 1 necessary)
+        bmap_size += 1;
+    }
+
     int fd;
     if (!access(filename, F_OK)){
         
