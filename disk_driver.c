@@ -72,7 +72,7 @@ void DiskDriver_init(DiskDriver* disk, const char* filename, int num_blocks){
 
 int DiskDriver_readBlock(DiskDriver* disk, void* dest, int block_num){
 
-    if(disk == NULL || disk ->header ->bitmap_blocks < block_num || block_num < 0 || dest == NULL){
+    if(disk == NULL || disk ->header ->bitmap_blocks-1 < block_num || block_num < 0 || dest == NULL){
         printf("Parametri passati a DiskDriver_readBlock non conformi\n");
         return -1;
     }
@@ -116,12 +116,14 @@ int DiskDriver_readBlock(DiskDriver* disk, void* dest, int block_num){
         read_bytes += ret;
     }
 
+    printf("Byte letti: %d\n", read_bytes);
+
     return 0;       //se ritorna 0 significa che tutto è andato bene
 }
 
 int DiskDriver_writeBlock(DiskDriver* disk, void* src, int block_num){
     
-    if(disk == NULL || disk ->header ->bitmap_blocks < block_num || block_num < 0 || src == NULL){
+    if(disk == NULL || disk ->header ->bitmap_blocks-1 < block_num || block_num < 0 || src == NULL){
         printf("parametri passati a DiskDriver_writeBlock non conformi\n");
         return -1;
     }
@@ -174,6 +176,8 @@ int DiskDriver_writeBlock(DiskDriver* disk, void* src, int block_num){
         
         written_bytes += ret;
     }
+
+    printf("Byte scritti: %d\n", written_bytes);
     
     return 0;   //se si ritorna 0 è andato tutto bene
 
