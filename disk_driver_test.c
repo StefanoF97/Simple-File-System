@@ -52,7 +52,7 @@ int main(int argc, char* argv[]){
         flb3.data[i] = 1;
 
     //Trying to write something on the disk starting from fileblock
-    printf("I'm writing first FileBlock in disk(flb1)\n");
+    printf("I'm writing first FileBlock(flb1) in disk in position 0\n");
     if(DiskDriver_writeBlock(diskdriver, &flb1, 0) == -1){
         printf("Error in writing block 0 of flb1\n");
         return -1;
@@ -61,8 +61,26 @@ int main(int argc, char* argv[]){
     printf("Bitmap in posizione 0: %d\n", diskdriver ->bitmap_data[0]);
     printf("free_blocks: %d\n", diskdriver ->header ->free_blocks);
     printf("first_free_block :%d\n", diskdriver ->header ->first_free_block);
-    printf("Not success because bitmap_entries is not 0\n\n\n");
-    
+    printf("Success\n\n\n");
+
+    printf("I'm writing second FileBlock(flb2) in disk in position 0\n");
+    if(DiskDriver_writeBlock(diskdriver, &flb2, 0) == -1){
+        printf("Error in writing block 0 of flb1\n");
+        printf("Success\n\n\n");
+    }
+    DiskDriver_flush(diskdriver);
+
+    printf("I'm writing second FileBlock(flb2) in disk in position 1\n");
+    if(DiskDriver_writeBlock(diskdriver, &flb2, 1) == -1){
+        printf("Error in writing block 1 of flb2\n");
+        return -1;
+    }
+    DiskDriver_flush(diskdriver);
+    printf("Bitmap in posizione 1: %d\n", diskdriver ->bitmap_data[1]);
+    printf("free_blocks: %d\n", diskdriver ->header ->free_blocks);
+    printf("first_free_block :%d\n", diskdriver ->header ->first_free_block);
+    printf("Success\n\n\n");
+
     free(diskdriver);
 
     return 0;
