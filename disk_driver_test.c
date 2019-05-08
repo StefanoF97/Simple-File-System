@@ -65,7 +65,11 @@ int main(int argc, char* argv[]){
     printf("I'm writing first FileBlock(flb1) in disk in position 0\n");
     if(DiskDriver_writeBlock(diskdriver, &flb1, 0) == -1){
         printf("Error in writing block 0 of flb1\n");
-        return -1;
+        printf("Insuccess\n\n\n");
+    }
+    else{
+        printf("Writing correctly in position 0 of disk\n");
+        printf("Success\n\n\n");
     }
     DiskDriver_flush(diskdriver);
     printf("Bitmap in posizione 0: %d\n", diskdriver ->bitmap_data[0]);
@@ -73,17 +77,25 @@ int main(int argc, char* argv[]){
     printf("first_free_block :%d\n", diskdriver ->header ->first_free_block);
     printf("Success\n\n\n");
 
-    printf("I'm writing second FileBlock(flb2) in disk in position 0\n");
+    printf("I'm writing second FileBlock(flb2) in disk in position 0 (it has just occupied)\n");
     if(DiskDriver_writeBlock(diskdriver, &flb2, 0) == -1){
         printf("Error in writing block 0 of flb1\n");
         printf("Success\n\n\n");
+    }
+    else{
+        printf("Writing correctly position 0 of disk\n");
+        printf("Insuccess\n\n\n");
     }
     DiskDriver_flush(diskdriver);
 
     printf("I'm writing second FileBlock(flb2) in disk in position 1\n");
     if(DiskDriver_writeBlock(diskdriver, &flb2, 1) == -1){
         printf("Error in writing block 1 of flb2\n");
-        return -1;
+        printf("Insuccess\n\n\n");
+    }
+    else{
+        printf("Writing correctly in position 1 of disk\n");
+        printf("Success\n\n\n");
     }
     DiskDriver_flush(diskdriver);
     printf("Bitmap in posizione 1: %d\n", diskdriver ->bitmap_data[1]);
@@ -94,7 +106,11 @@ int main(int argc, char* argv[]){
     printf("I'm writing third FileBlock(flb3) in disk in position 2\n");
     if(DiskDriver_writeBlock(diskdriver, &flb3, 2) == -1){
         printf("Error in writing block 2 of flb3\n");
-        return -1;
+        printf("Insuccess\n\n\n");
+    }
+    else{
+        printf("Writing correctly in position 2 of disk\n");
+        printf("Success\n\n\n");
     }
     DiskDriver_flush(diskdriver);
     printf("Bitmap in posizione 2: %d\n", diskdriver ->bitmap_data[2]);
@@ -102,11 +118,14 @@ int main(int argc, char* argv[]){
     printf("first_free_block :%d\n", diskdriver ->header ->first_free_block);
     printf("Success\n\n\n");
 
-    printf("I'm writing third FileBlock(flb3) in disk in position 0\n");
+    printf("I'm writing third FileBlock(flb3) in disk in position 0 (it has just occupied)\n");
     if(DiskDriver_writeBlock(diskdriver, &flb3, 0) == -1){
         printf("Error in writing block 0 of flb3\n");
         printf("Success\n\n\n");
-
+    }
+    else{
+        printf("Writing correctly in position 0 of disk\n");
+        printf("Insuccess\n\n\n");
     }
     DiskDriver_flush(diskdriver);
 
@@ -194,10 +213,25 @@ int main(int argc, char* argv[]){
     printf("I'm re-writing first FileBlock(flb1) in disk in position 0 to see if there is error\n");
     if(DiskDriver_writeBlock(diskdriver, &flb1, 0) == -1){
         printf("Error in writing block 0 of flb1\n");
-        return -1;
+        printf("Insuccess");
     }
-    DiskDriver_flush(diskdriver);
+    else{
+        printf("Writing correctly in position 0 of disk\n");
+        printf("Success\n\n");
+    }
     
+    
+    printf("I'm writing block 3 in disk to see if it checks errors\n");
+    if(DiskDriver_writeBlock(diskdriver, &flb1, 0) == -1){
+        printf("Error in writing block 0 of flb1\n");
+        printf("Success\n\n\n");
+    }
+    else{
+        printf("Writing correctly in position 3 of disk\n");
+        printf("Insuccess\n\n\n");
+    }   
+    
+    DiskDriver_flush(diskdriver);
     free(flbt);
     free(diskdriver);
 
