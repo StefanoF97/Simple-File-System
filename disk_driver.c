@@ -233,7 +233,7 @@ int DiskDriver_freeBlock(DiskDriver* disk, int block_num){
         return -1;
     }
 
-    char zeros[BLOCK_SIZE] = { 0 };   //{ 0 } aggiunge esattamente 512 0, alternativa a "000000000000....."
+    char zeros[BLOCK_SIZE] = { 0 };   //{ 0 } aggiunge esattamente 512 zeri, alternativa a "000000000000....."
     int ret, written_bytes = 0;
     while(written_bytes < BLOCK_SIZE){      //normal write, to fill the position of 0
 
@@ -252,6 +252,11 @@ int DiskDriver_freeBlock(DiskDriver* disk, int block_num){
         written_bytes += ret;
     }
 
+    if(DiskDriver_flush(disk) == -1){
+        printf("Error in flushing after set 0 in block\n");
+        return -1;
+    }
+    
     BitMap bmap;
     bmap.entries = disk ->bitmap_data;
     bmap.num_bits = disk ->header ->bitmap_blocks;
