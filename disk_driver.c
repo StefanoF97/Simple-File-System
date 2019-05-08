@@ -11,6 +11,7 @@
 #include <string.h>
 #include <sys/syscall.h>
 #include <linux/falloc.h>
+#include "simplefs.h"
 
 void DiskDriver_init(DiskDriver* disk, const char* filename, int num_blocks){
 
@@ -58,7 +59,7 @@ void DiskDriver_init(DiskDriver* disk, const char* filename, int num_blocks){
 
         int i = 0;
         while(i < header ->bitmap_blocks){    //inizializzo a zero bitmap_data
-            disk ->bitmap_data[i] = 0;
+            disk ->bitmap_data[i] = '0';
             i++;
         }
     }
@@ -97,7 +98,7 @@ int DiskDriver_readBlock(DiskDriver* disk, void* dest, int block_num){
 
     int ret; 
     int read_bytes = 0;
-    while(read_bytes < BLOCK_SIZE){         
+    while(read_bytes <  BLOCK_SIZE ){    
         //grazie alla lseek sono già posizionato nel punto dove devo leggere 
         //da finire normale funzione di lettura
         ret = read(disk ->fd, dest + read_bytes, BLOCK_SIZE - read_bytes);
