@@ -227,11 +227,36 @@ int DiskDriver_freeBlock(DiskDriver* disk, int block_num){
         return -1;
     }
 
+    int offset = lseek(disk ->fd, sizeof(DiskHeader) + (disk ->header ->bitmap_entries) + (block_num * BLOCK_SIZE) , SEEK_SET);
+    if(offset == -1){
+        printf("Error in lseek (in DiskDriver_freeBlock)\n");
+        return -1;
+    }
+
+    char zeros[BLOCK_SIZE] = { 0 };   //{ 0 } aggiunge esattamente 512 0, alternativa a "000000000000....."
+    int ret, written_bytes = 0;
+    while(written_bytes < BLOCK_SIZE){      //normal write, to fill the position of 0
+
+        ret = write(disk ->fd, zeros + written_bytes, BLOCK_SIZE - written_bytes);
+        if(ret == -1 && errno == EINTR)
+            continue;
+        
+        if(ret == 0)
+            break;
+        
+        if(ret == -1){
+            printf("Error in writing 0 to free block\n");
+            return -1;
+        }
+        
+        written_bytes += ret;
+    }
+
     BitMap bmap;
     bmap.entries = disk ->bitmap_data;
     bmap.num_bits = disk ->header ->bitmap_blocks;
 
-    int ret = BitMap_set(&bmap, block_num, 0);
+    ret = BitMap_set(&bmap, block_num, 0);
 
     if(ret == -1){
         printf("Error in Bitmap_set when trying fo free block\n");
