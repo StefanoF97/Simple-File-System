@@ -41,6 +41,7 @@ int main(int argc, char* argv[]){
     char fb1[BLOCK_SIZE - sizeof(BlockHeader)];             //must use a temp char[] to memorize the data and after use strcpy to copy them in flbt ->data
     for(i = 0; i < BLOCK_SIZE - sizeof(BlockHeader); i++)   //strcpy copy in a correct way the data, without strcpy i got an error: "Address 0x522d6e0 is 0 bytes after a block of size 512 alloc'd"
         fb1[i] = '7';
+    fb1[BLOCK_SIZE - sizeof(BlockHeader) - 1] = '\0';
     strcpy(flb1.data, fb1);
     
     
@@ -49,6 +50,7 @@ int main(int argc, char* argv[]){
     char fb2[BLOCK_SIZE - sizeof(BlockHeader)];
     for(i = 0; i < BLOCK_SIZE - sizeof(BlockHeader); i++)
         fb2[i] = '1';
+    fb2[BLOCK_SIZE - sizeof(BlockHeader) - 1] = '\0';
     strcpy(flb2.data, fb2);
     
     FileBlock flb3;
@@ -56,6 +58,7 @@ int main(int argc, char* argv[]){
     char fb3[BLOCK_SIZE - sizeof(BlockHeader)];
     for(i = 0; i < BLOCK_SIZE - sizeof(BlockHeader); i++)
         fb3[i] = '5';
+    fb3[BLOCK_SIZE - sizeof(BlockHeader) - 1] = '\0';
     strcpy(flb3.data, fb3);
 
     //Trying to write something on the disk starting from fileblock
@@ -116,7 +119,7 @@ int main(int argc, char* argv[]){
     flbt ->header = blockheader;
     
     printf("leggo in posizione 0\n");
-    if(DiskDriver_readBlock(diskdriver, flbt ->data, 0) != -1){
+    if(DiskDriver_readBlock(diskdriver, flbt, 0) != -1){
         printf("%s\n", flbt ->data);
         printf("Success\n\n\n");
     }
@@ -124,39 +127,37 @@ int main(int argc, char* argv[]){
         printf("free space or incorrect position\n");
         printf("Insuccess\n\n\n");    }
 
-    /*
+    
     printf("leggo in posizione 1\n");
-    if(DiskDriver_readBlock(diskdriver, &arr2, 1) != -1){
-        printf("Dati: %s\n", arr2);
+    if(DiskDriver_readBlock(diskdriver, flbt, 1) != -1){
+        printf("Dati: %s\n", flbt ->data);
         printf("Success\n\n\n");
     }
     else{
         printf("free space or incorrect position\n");
         printf("Insuccess\n\n\n");
     }
-    */
-    /*
+    
     printf("leggo in posizione 2\n");
-    if(DiskDriver_readBlock(diskdriver, &arr3, 2) != -1){
-        printf("Dati: %s\n", arr3);
+    if(DiskDriver_readBlock(diskdriver, flbt, 2) != -1){
+        printf("Dati: %s\n", flbt ->data);
         printf("Success\n\n\n");
     }
     else{
         printf("free space or incorrect position\n");
         printf("Insuccess\n\n\n");
     }
-    */
-    /*
+    
     printf("leggo in posizione 3\n");
-    if(DiskDriver_readBlock(diskdriver, &arr1, 3) != -1){
-        printf("Dati: %s\n", arr3);
+    if(DiskDriver_readBlock(diskdriver, flbt, 3) != -1){
+        printf("Dati: %s\n", flbt ->data);
         printf("Insuccess\n\n\n");
     }
     else{
         printf("free space or incorrect position\n");
         printf("Success\n\n\n");
     }
-    */
+    
     //Try getFreeBlock function and FreeBLock
     int ret;
 
