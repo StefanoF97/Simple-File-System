@@ -190,8 +190,14 @@ int main(int argc, char* argv[]){
         printf("Sorry but there aren't free space anymore\n");
         printf("Insuccess\n\n\n");
     }
-    
+
+    printf("I'm re-writing first FileBlock(flb1) in disk in position 0 to see if there is error\n");
+    if(DiskDriver_writeBlock(diskdriver, &flb1, 0) == -1){
+        printf("Error in writing block 0 of flb1\n");
+        return -1;
+    }
     DiskDriver_flush(diskdriver);
+    
     free(flbt);
     free(diskdriver);
 
