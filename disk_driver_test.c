@@ -5,6 +5,8 @@
 #include "simplefs.h"
 
 int main(int argc, char* argv[]){
+
+    printf("\nThese tests can be executed if disk is present or if disk must be created...\n\n\n");
     
     DiskDriver* diskdriver = (DiskDriver*)malloc(sizeof(DiskDriver));
     const char* filename = "./disk.txt";
@@ -65,7 +67,7 @@ int main(int argc, char* argv[]){
     printf("I'm writing first FileBlock(flb1) in disk in position 0\n");
     if(DiskDriver_writeBlock(diskdriver, &flb1, 0) == -1){
         printf("Error in writing block 0 of flb1\n");
-        printf("Insuccess\n\n\n");
+        printf("Insuccess (if disk has been created in the past is success)\n\n\n");
     }
     else{
         printf("Writing correctly in position 0 of disk\n");
@@ -91,7 +93,7 @@ int main(int argc, char* argv[]){
     printf("I'm writing second FileBlock(flb2) in disk in position 1\n");
     if(DiskDriver_writeBlock(diskdriver, &flb2, 1) == -1){
         printf("Error in writing block 1 of flb2\n");
-        printf("Insuccess\n\n\n");
+        printf("Insuccess (if disk has been created in the past is Success)\n\n\n");
     }
     else{
         printf("Writing correctly in position 1 of disk\n");
@@ -106,7 +108,7 @@ int main(int argc, char* argv[]){
     printf("I'm writing third FileBlock(flb3) in disk in position 2\n");
     if(DiskDriver_writeBlock(diskdriver, &flb3, 2) == -1){
         printf("Error in writing block 2 of flb3\n");
-        printf("Insuccess\n\n\n");
+        printf("Insuccess (if disk has been created in the past is Success)\n\n\n");
     }
     else{
         printf("Writing correctly in position 2 of disk\n");
