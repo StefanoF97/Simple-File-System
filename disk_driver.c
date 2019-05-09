@@ -35,6 +35,26 @@ void DiskDriver_init(DiskDriver* disk, const char* filename, int num_blocks){
             return;
         }
 
+        DiskHeader* header = (DiskHeader*)mmap(0, sizeof(DiskHeader) + bmap_size, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);  //mappo sul file in ingresso memoria virtuale
+        if(header == MAP_FAILED){
+            printf("Mappatura su file non riuscita...ritentare\n");
+            close(fd);
+            return;
+        }
+
+        disk ->header = header;
+        disk ->bitmap_data = (char*)header + sizeof(DiskHeader);
+        disk ->fd = fd;
+        
+    }
+    else{
+        
+        fd = open("./disk.txt", O_CREAT | O_TRUNC | O_RDWR, 0666);
+        if(fd == -1){
+            printf("Error in creating and opening file\n");
+            return;
+        }
+
         if(posix_fallocate(fd, 0, sizeof(DiskHeader)+bmap_size) != 0){        //ho dovuto inserire l'allocazione del file per evitare l'errore "Errore di bus(core dump creato)"
             printf("Errore nella allocazione del file\n");
             return;
@@ -59,13 +79,9 @@ void DiskDriver_init(DiskDriver* disk, const char* filename, int num_blocks){
 
         int i = 0;
         while(i < header ->bitmap_blocks){    //inizializzo a zero bitmap_data
-            disk ->bitmap_data[i] = '0';
+            disk ->bitmap_data[i] = 0;
             i++;
         }
-    }
-    else{
-        printf("File cannot be accessed\n");
-        return;
     }
     
     printf("Init avvenuta correttamente\n");
