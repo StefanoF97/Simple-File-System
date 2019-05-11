@@ -77,7 +77,7 @@ void DiskDriver_init(DiskDriver* disk, const char* filename, int num_blocks){
         header ->free_blocks = num_blocks;
 
         int i = 0;
-        while(i < header ->bitmap_blocks){    //inizializzo a zero bitmap_data
+        while(i < header ->bitmap_entries){    //inizializzo a zero bitmap_data
             disk ->bitmap_data[i] = 0;
             i++;
         }
