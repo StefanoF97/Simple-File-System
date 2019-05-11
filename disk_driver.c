@@ -11,7 +11,6 @@
 #include <string.h>
 #include <sys/syscall.h>
 #include <linux/falloc.h>
-#include "simplefs.h"
 
 void DiskDriver_init(DiskDriver* disk, const char* filename, int num_blocks){
 
