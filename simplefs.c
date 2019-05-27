@@ -28,7 +28,7 @@ DirectoryHandle* SimpleFS_init(SimpleFS* fs, DiskDriver* disk){
     dh ->dcb = fsb;
     printf("Init of SimpleFS is a success\n");
 
-    return fsb;
+    return dh;
 }
 
 void SimpleFS_format(SimpleFS* fs){
@@ -99,11 +99,15 @@ FileHandle* SimpleFS_createFile(DirectoryHandle* d, const char* filename){
                 printf("impossible to read directories after firstdirectory\n");
                 return NULL;
             }
+
+            int i;
+            for(i = 0; i < BLOCK_SIZE-sizeof(BlockHeader)/sizeof(int); i++){
             
-            if(dirblock ->file_blocks[i] > 0 && (DiskDriver_readBlock(disk, &ffb, dirblock ->file_blocks[i]) != -1)){  //if block is empty is useless to read it
-                if(strcmp(ffb.fcb.name, filename) == 0){
-                    printf("File already exists, change filename please\n");
-                    return NULL;
+                if(dirblock ->file_blocks[i] > 0 && (DiskDriver_readBlock(disk, &ffb, dirblock ->file_blocks[i]) != -1)){  //if block is empty is useless to read it
+                    if(strcmp(ffb.fcb.name, filename) == 0){
+                        printf("File already exists, change filename please\n");
+                        return NULL;
+                    }
                 }
             }
 
@@ -133,13 +137,15 @@ FileHandle* SimpleFS_createFile(DirectoryHandle* d, const char* filename){
         return NULL;
     }
 
-    if(firstdirblock ->num_entries < (BLOCK_SIZE - sizeof(BlockHeader) -sizeof(FileControlBlock) -sizeof(int)) / sizeof(int)){ //if it's ok i can put new file block in FirstDirectoryBlock
+    if(firstdirblock ->num_entries < (BLOCK_SIZE - sizeof(BlockHeader) -
+                                        sizeof(FileControlBlock) -sizeof(int)) 
+                                        / sizeof(int)){ //if it's ok i can put new file block in FirstDirectoryBlock
         
         int i;
         for(i = 0; i < firstdirblock ->num_entries; i++){
             if(firstdirblock ->file_blocks[i] == 0){
                 firstdirblock ->num_entries++;
-                firstdirblock ->file_blocks[i] = i;
+                firstdirblock ->file_blocks[i] = free_block_to_mem;
                 break;
             }
         }
@@ -161,9 +167,9 @@ FileHandle* SimpleFS_createFile(DirectoryHandle* d, const char* filename){
 
             int i;
             for(i = 0; i < BLOCK_SIZE-sizeof(BlockHeader)/sizeof(int); i++){
-                if(dirblock ->file_blocks[i] == 0){  //if block is empty is useless to read it
+                if(dirblock ->file_blocks[i] == 0){  //if block is empty i write
                     firstdirblock ->num_entries++;
-                    dirblock ->file_blocks[i] = &newFile;
+                    dirblock ->file_blocks[i] = free_block_to_mem;
                     break;
                 }
             }
@@ -180,5 +186,47 @@ FileHandle* SimpleFS_createFile(DirectoryHandle* d, const char* filename){
     filehandle ->sfs = d ->sfs;
 
     return filehandle;
+    
+}
+
+int SimpleFS_readDir(char** names, DirectoryHandle* d){
+
+    FirstDirectoryBlock* fdb = d ->dcb;
+    DiskDriver* disk = d ->sfs ->disk;
+
+    FirstFileBlock file_to_read;
+    int pos_in_names = 0;
+
+    int i;
+    for(i = 0; i < fdb ->num_entries; i++){
+
+        if(fdb ->file_blocks[i] > 0 && DiskDriver_readBlock(disk, &file_to_read, fdb ->file_blocks[i]) == -1){
+            names[pos_in_names] = file_to_read.fcb.name;
+            pos_in_names++;
+        }
+    }
+
+    int nextDir = fdb ->header.next_block;
+    DirectoryBlock db;
+    
+    while(nextDir != -1){
+        
+        if(DiskDriver_readBlock(disk, &db, nextDir) == -1){
+            printf("Cannot read directory\n");
+            return -1;
+        }
+
+        int i;
+        for(i = 0; i < BLOCK_SIZE-sizeof(BlockHeader)/sizeof(int); i++){
+            if(db.file_blocks[i] > 0 && DiskDriver_readBlock(disk, &file_to_read, db.file_blocks[i]) == -1){
+                names[pos_in_names] = file_to_read.fcb.name;
+                pos_in_names++;
+            }
+        }
+
+        nextDir = db.header.next_block;
+    }
+    
+    return 0;
     
 }
