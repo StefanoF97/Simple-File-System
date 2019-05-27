@@ -42,17 +42,79 @@ void SimpleFS_format(SimpleFS* fs){
     fdb.fcb.block_in_disk = 0;        //in position 0
     fdb.fcb.directory_block = -1;     //top level diectory, like a "root", no parent directory
     fdb.fcb.is_dir = 1;
-    strcpy(fdb.fcb.name, "\0");       //need to use strcpy, without error
+    strcpy(fdb.fcb.name, "/0");       //need to use strcpy, without error
     fdb.header.previous_block = -1;
     fdb.header.next_block = -1;       //in the future it could be have a next block, now it hasn't
     fdb.header.block_in_file = 0;     //repeatedly position 0
-    fdb.num_entries = fs ->disk ->header ->bitmap_entries;
-
+    
     //no need to clear bitmap block because in DiskDriver_init i've just cleared
 
     if(DiskDriver_writeBlock(fs ->disk, &fdb, 0) == -1){
-        printf("Error in writing disk at position 0 in SimpleFS_format\n");
+        printf("Error in writing disk at position 0 (for FirstDirectoryBlock) in SimpleFS_format\n");
         return;
     }
+    
+}
+
+FileHandle* SimpleFS_createFile(DirectoryHandle* d, const char* filename){
+    
+    if(d == NULL || filename == NULL){
+        printf("DirectoryHandle or filename are NULL\n");
+        return NULL;
+    }
+
+    FirstFileBlock ffb;         //using for reading from disk...
+    FirstDirectoryBlock* firstdirblock = d ->dcb;
+    DiskDriver* disk = d ->sfs ->disk;
+
+    if(DiskDriver_getFreeBlock(d ->sfs ->disk, 0) == -1){
+        printf("No space on disk remained to create new file\n");
+        return NULL;
+    }
+
+    if(d ->dcb ->num_entries > 0){
+        
+        //taking FirstDirectoryBlock (and after directory block using blockheader) i can try to find if there is just the same file i want to create
+        int i;
+        
+        for(i = 0; i < d ->dcb ->num_entries; i++){
+            
+            if(firstdirblock ->file_blocks[i] > 0 && (DiskDriver_readBlock(disk, &ffb, firstdirblock ->file_blocks[i]) != -1)){  //if block is empty is useless to read it
+                if(strcmp(ffb.fcb.name, filename) == 0){
+                    printf("File already exists, change filename please\n");
+                    return NULL;
+                }
+            }
+        }
+
+        int nextdir = firstdirblock ->header.next_block;
+        DirectoryBlock* dirblock;
+
+        while(1){
+
+            if(nextdir == -1)
+                break;
+
+            if(DiskDriver_readBlock(disk, dirblock, nextdir) == -1){
+                printf("impossible to read directories after firsdirectory\n");
+                return NULL;
+            }
+            
+            if(dirblock ->file_blocks[i] > 0 && (DiskDriver_readBlock(disk, &ffb, dirblock ->file_blocks[i]) != -1)){  //if block is empty is useless to read it
+                if(strcmp(ffb.fcb.name, filename) == 0){
+                    printf("File already exists, change filename please\n");
+                    return NULL;
+                }
+            }
+
+            nextdir = dirblock ->header.next_block;
+        }
+        
+        //if arrived here, there aren't any file that has the same filename, so i can create it
+
+
+    }
+
+    return NULL;
     
 }
