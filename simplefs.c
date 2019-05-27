@@ -72,12 +72,12 @@ FileHandle* SimpleFS_createFile(DirectoryHandle* d, const char* filename){
         return NULL;
     }
 
-    if(d ->dcb ->num_entries > 0){
+    if(firstdirblock ->num_entries > 0){
         
         //taking FirstDirectoryBlock (and after directory block using blockheader) i can try to find if there is just the same file i want to create
         int i;
         
-        for(i = 0; i < d ->dcb ->num_entries; i++){
+        for(i = 0; i < firstdirblock ->num_entries; i++){
             
             if(firstdirblock ->file_blocks[i] > 0 && (DiskDriver_readBlock(disk, &ffb, firstdirblock ->file_blocks[i]) != -1)){  //if block is empty is useless to read it
                 if(strcmp(ffb.fcb.name, filename) == 0){
@@ -96,7 +96,7 @@ FileHandle* SimpleFS_createFile(DirectoryHandle* d, const char* filename){
                 break;
 
             if(DiskDriver_readBlock(disk, dirblock, nextdir) == -1){
-                printf("impossible to read directories after firsdirectory\n");
+                printf("impossible to read directories after firstdirectory\n");
                 return NULL;
             }
             
@@ -109,12 +109,76 @@ FileHandle* SimpleFS_createFile(DirectoryHandle* d, const char* filename){
 
             nextdir = dirblock ->header.next_block;
         }
+    }
         
-        //if arrived here, there aren't any file that has the same filename, so i can create it
+    //if arrived here, there aren't any file that has the same filename, so i can create it
 
+    int free_block_to_mem;
+    if((free_block_to_mem = DiskDriver_getFreeBlock(disk, 0)) == -1){
+        printf("No free blocks in the disk\n");
+        return NULL;
+    }
+
+    FirstFileBlock newFile = { 1 };
+    newFile.header.block_in_file = 0;
+    newFile.header.next_block = -1;
+    newFile.header.previous_block = -1;
+    newFile.fcb.is_dir = 0;
+    strcpy(newFile.fcb.name, filename);
+    newFile.fcb.block_in_disk = free_block_to_mem;
+    newFile.fcb.directory_block = firstdirblock ->fcb.block_in_disk;    //because starting from FirstDirectoryBlock
+
+    if(DiskDriver_writeBlock(disk, &newFile, free_block_to_mem) == -1){
+        printf("Cannot write new file on disk\n");
+        return NULL;
+    }
+
+    if(firstdirblock ->num_entries < (BLOCK_SIZE - sizeof(BlockHeader) -sizeof(FileControlBlock) -sizeof(int)) / sizeof(int)){ //if it's ok i can put new file block in FirstDirectoryBlock
+        
+        int i;
+        for(i = 0; i < firstdirblock ->num_entries; i++){
+            if(firstdirblock ->file_blocks[i] == 0){
+                firstdirblock ->num_entries++;
+                firstdirblock ->file_blocks[i] = i;
+                break;
+            }
+        }
+
+    }else{
+        
+        int nextdir = firstdirblock ->header.next_block;
+        DirectoryBlock* dirblock;
+
+        while(1){
+
+            if(nextdir == -1)
+                break;
+
+            if(DiskDriver_readBlock(disk, dirblock, nextdir) == -1){
+                printf("impossible to read directory after firstdirectory\n");
+                return NULL;
+            }
+
+            int i;
+            for(i = 0; i < BLOCK_SIZE-sizeof(BlockHeader)/sizeof(int); i++){
+                if(dirblock ->file_blocks[i] == 0){  //if block is empty is useless to read it
+                    firstdirblock ->num_entries++;
+                    dirblock ->file_blocks[i] = &newFile;
+                    break;
+                }
+            }
+
+            nextdir = dirblock ->header.next_block;
+        }
 
     }
 
-    return NULL;
+    FileHandle* filehandle = (FileHandle*)malloc(sizeof(FileHandle));
+    filehandle ->directory = firstdirblock;
+    filehandle ->fcb = &newFile;
+    filehandle ->pos_in_file = 0;
+    filehandle ->sfs = d ->sfs;
+
+    return filehandle;
     
 }
