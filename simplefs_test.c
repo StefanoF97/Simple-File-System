@@ -23,15 +23,28 @@ int main(int argc, char** argv) {
 
     DirectoryHandle* dir_root = SimpleFS_init(&sfs, &disk);
     if(dir_root == NULL){
-        printf("Perhaps i need to format(i need to write something to read)...\n");
+        printf("Perhaps i need to format(i'll write something to read)...\n");
         SimpleFS_format(&sfs);
         dir_root = SimpleFS_init(&sfs, &disk);
         if(dir_root == NULL){
-            printf("Problems in init disk");
+            printf("Problems in init disk\n\n");
             return -1;
         }
     }
 
-  return 0;
+    printf("Tests for SimpleFS_createFile\n");
+
+    FileHandle* filehandle1 = SimpleFS_createFile(dir_root, "first_file");
+    if(filehandle1 == NULL){
+        printf("Error in creating a file\n");
+    }
+
+    int res = SimpleFS_mkDir(dir_root, "subDir1");
+    if(res == -1){
+        printf("Error in creating new directory");
+    }
+
+
+    return 0;
 
 }
