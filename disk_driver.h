@@ -49,3 +49,6 @@ int DiskDriver_getFreeBlock(DiskDriver* disk, int start);
 
 // writes the data (flushing the mmaps)
 int DiskDriver_flush(DiskDriver* disk);
+
+//I need to use it to update directories and file on disk in SimpleFS
+int updateBlockDisk(DiskDriver* disk, void* src, int block_num);
