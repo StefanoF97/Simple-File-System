@@ -199,6 +199,46 @@ int DiskDriver_writeBlock(DiskDriver* disk, void* src, int block_num){
 
 }
 
+int updateBlockDisk(DiskDriver* disk, void* src, int block_num){
+    
+    if(disk == NULL || disk ->header ->bitmap_blocks-1 < block_num || block_num < 0 || src == NULL){
+        printf("parametri passati a updateBlockDisk non conformi\n");
+        return -1;
+    }
+
+    //come nella readBlock...sfrutto lseek per far "puntare" il file descriptor al blocco da scrivere
+    int offset = lseek(disk ->fd, sizeof(DiskHeader) + (disk ->header ->bitmap_entries) + (block_num * BLOCK_SIZE), SEEK_SET);
+    if(offset == -1){
+        printf("Errore in lseek (in DiskDriver_writeBlock )\n");
+        return -1;
+    }
+
+    int ret;
+    int written_bytes = 0;
+    while (written_bytes < BLOCK_SIZE){
+        
+        ret = write(disk ->fd, src + written_bytes, BLOCK_SIZE - written_bytes);
+
+        if(ret == -1 && errno == EINTR)
+            continue;
+        
+        if(ret == -1){
+            printf("Errore in scrittura\n");
+            return -1;
+        }
+
+        if(ret == 0)
+            break;
+        
+        written_bytes += ret;
+    }
+
+    printf("Byte scritti: %d\n", written_bytes);
+    
+    return 0;   //se si ritorna 0 è andato tutto bene
+
+}
+
 int DiskDriver_getFreeBlock(DiskDriver* disk, int start){
     //posso sicuramente sfruttare la bitmap_get ponendo status = 0, in questo modo
     //mi restituirà la posizione del primo blocco che ha bit = status(0 in questo caso)
