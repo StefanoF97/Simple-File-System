@@ -56,6 +56,7 @@ void SimpleFS_format(SimpleFS* fs){
     
 }
 
+
 FileHandle* SimpleFS_createFile(DirectoryHandle* d, const char* filename){
     
     if(d == NULL || filename == NULL){
@@ -132,15 +133,18 @@ FileHandle* SimpleFS_createFile(DirectoryHandle* d, const char* filename){
         return NULL;
     }
 
+    DirectoryBlock* dirblock;
+
     if(firstdirblock ->num_entries < (BLOCK_SIZE - sizeof(BlockHeader) -
                                         sizeof(FileControlBlock) -sizeof(int)) 
                                         / sizeof(int)){ //if it's ok i can put new file block in FirstDirectoryBlock
         
         int i;
-        for(i = 0; i < firstdirblock ->num_entries; i++){
+        for(i = 0; i < (BLOCK_SIZE - sizeof(BlockHeader) - sizeof(FileControlBlock) -sizeof(int)) / sizeof(int); i++){
             if(firstdirblock ->file_blocks[i] == 0){
                 firstdirblock ->num_entries++;
                 firstdirblock ->file_blocks[i] = free_block_to_mem;
+                updateBlockDisk(disk, firstdirblock, firstdirblock ->fcb.block_in_disk);
                 break;
             }
         }
@@ -148,14 +152,13 @@ FileHandle* SimpleFS_createFile(DirectoryHandle* d, const char* filename){
     }else{
         
         int nextdir = firstdirblock ->header.next_block;
-        DirectoryBlock* dirblock;
-
+       
         while(1){
 
             if(nextdir == -1)
                 break;
 
-            if(DiskDriver_readBlock(disk, dirblock, nextdir) == -1){
+            if(DiskDriver_readBlock(disk, dirblock, nextdir) == -1){        //need to update new information on disk to keep in memory new changes
                 printf("impossible to read directory after firstdirectory\n");
                 return NULL;
             }
@@ -164,7 +167,9 @@ FileHandle* SimpleFS_createFile(DirectoryHandle* d, const char* filename){
             for(i = 0; i < (BLOCK_SIZE-sizeof(BlockHeader))/sizeof(int); i++){
                 if(dirblock ->file_blocks[i] == 0){  //if block is empty i write
                     firstdirblock ->num_entries++;
+                    updateBlockDisk(disk, firstdirblock, firstdirblock ->fcb.block_in_disk);
                     dirblock ->file_blocks[i] = free_block_to_mem;
+                    updateBlockDisk(disk, dirblock, nextdir);
                     break;
                 }
             }
@@ -173,7 +178,7 @@ FileHandle* SimpleFS_createFile(DirectoryHandle* d, const char* filename){
         }
     }
 
-    //it's missing the case when i can't find free spaces, i should create a new directory
+    //it's missing the case when i can't find free spaces, i should create a new directory, for now assume there is space enough
 
     FileHandle* filehandle = (FileHandle*)malloc(sizeof(FileHandle));
     filehandle ->directory = firstdirblock;
@@ -339,5 +344,10 @@ int SimpleFS_mkDir(DirectoryHandle* d, char* dirname){
         }
     }
 
+    return 0;
+}
+
+int SimpleFS_close(FileHandle* f){      //Use to free FileHandle
+    free(f);
     return 0;
 }
