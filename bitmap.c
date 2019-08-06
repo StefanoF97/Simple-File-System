@@ -24,6 +24,7 @@ int BitMap_get(BitMap* bmap, int start, int status){
 
     if(bmap == NULL || start > (bmap -> num_bits) || start < 0 || status < 0)
         return -1;    //non avrò bit disponibili a partire da quel start, oppure i valori passati non sono corenti
+        
 
     BitMapEntryKey bmapentry;
     int bit;
