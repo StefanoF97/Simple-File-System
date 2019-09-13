@@ -60,7 +60,7 @@ int main(int argc, char*argv[]){
     free(bitmap1);
     free(bitmap2);
 
-    //Some tests for Bitmap_test
+    //Some tests for Bitmap_set
     BitMap* bitmap3 = (BitMap*)malloc(sizeof(BitMap));
     bitmap3 ->num_bits = 8;
     bitmap3 ->entries = (char*)malloc(sizeof(char));
