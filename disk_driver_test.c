@@ -32,7 +32,7 @@ int main(int argc, char* argv[]){
 
     //Started test from here...
 
-    //I'm going to create 3 file block when i can write som data, before i need to alloc the header(in simplefs it will explain the chain...)
+    //I'm going to create 3 file block when i can write some data, before i need to alloc the header(in simplefs it will explain the chain...)
     BlockHeader blockheader;
     blockheader.next_block = 1;
     blockheader.previous_block = 1;
