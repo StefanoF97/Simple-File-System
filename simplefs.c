@@ -110,6 +110,10 @@ FileHandle* SimpleFS_createFile(DirectoryHandle* d, const char* filename){
             nextdir = dirblock ->header.next_block;
         }
     }
+    else{
+        printf("Nothing to read, directory is empty");
+        return NULL;
+    }
         
     //if arrived here, there aren't any file that has the same filename, so i can create it
 
@@ -185,7 +189,7 @@ FileHandle* SimpleFS_createFile(DirectoryHandle* d, const char* filename){
         }
     }
 
-    //This is the case when i can't find free spaces before, i should create a new directory e put in position 0 the new block
+    //This is the case where i can't find free spaces before, i should create a new directory e put in position 0 the new block
 
     DirectoryBlock dirblock_new = { 0 };
     dirblock_new.header.next_block = -1;
@@ -226,6 +230,75 @@ A:  ;
 
     return filehandle;
     
+}
+
+FileHandle* SimpleFS_openFile(DirectoryHandle* d, const char* filename){
+
+    if(d == NULL || filename == NULL){
+        printf("Parameters in input are wrong\n");
+        return NULL;
+    }
+
+    SimpleFS* sfs = d ->sfs;
+    FirstDirectoryBlock* firstDirBlock = d ->dcb;
+    FileHandle* filehandle_toFind = (FileHandle*)malloc(sizeof(FileHandle));
+
+    if(firstDirBlock ->num_entries > 0){
+        
+        filehandle_toFind ->sfs = sfs;  //Setting FileHandle for file to find
+        filehandle_toFind ->directory = firstDirBlock;
+        filehandle_toFind ->pos_in_file = 0;
+
+        FirstFileBlock ffb;
+        int i;
+        
+        for(i = 0; i < firstDirBlock ->num_entries; i++){
+            
+            if(firstDirBlock ->file_blocks[i] > 0 && (DiskDriver_readBlock(sfs ->disk, &ffb, firstDirBlock ->file_blocks[i]) != -1)){  //if block is empty is useless to read it
+                if(strcmp(ffb.fcb.name, filename) == 0){
+                    printf("File found to be opened\n");
+                    filehandle_toFind ->fcb = &ffb;
+                    return filehandle_toFind;
+                }
+            }
+        }
+
+        int nextdir = firstDirBlock ->header.next_block;
+        DirectoryBlock* dirblock;
+
+        while(1){
+
+            if(nextdir == -1)
+                break;
+
+            if(DiskDriver_readBlock(sfs ->disk, dirblock, nextdir) == -1){
+                printf("impossible to read directories after firstdirectory\n");
+                return NULL;
+            }
+
+            int i;
+            for(i = 0; i < BLOCK_SIZE-sizeof(BlockHeader)/sizeof(int); i++){
+            
+                if(dirblock ->file_blocks[i] > 0 && (DiskDriver_readBlock(sfs ->disk, &ffb, dirblock ->file_blocks[i]) != -1)){  //if block is empty is useless to read it
+                    if(strcmp(ffb.fcb.name, filename) == 0){
+                        printf("File found to be opened\n");
+                        filehandle_toFind ->fcb = &ffb;
+                        return filehandle_toFind;
+                    }
+                }
+            }
+
+            nextdir = dirblock ->header.next_block;
+        }
+    }
+    else{
+        printf("Nothing to open, directory is empty\n");
+        return NULL;
+    }
+    
+    printf("The file doesn't exist, please try with a different file\n");
+    free(filehandle_toFind);
+    return NULL;
 }
 
 int SimpleFS_readDir(char** names, DirectoryHandle* d){
