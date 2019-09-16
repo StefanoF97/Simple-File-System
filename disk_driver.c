@@ -132,7 +132,7 @@ int DiskDriver_readBlock(DiskDriver* disk, void* dest, int block_num){
         read_bytes += ret;
     }
 
-    printf("Byte letti: %d\n", read_bytes);
+    //printf("Byte letti: %d\n", read_bytes);
 
     return 0;       //se ritorna 0 significa che tutto è andato bene
 }
