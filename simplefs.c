@@ -308,8 +308,6 @@ int SimpleFS_seek(FileHandle* f, int pos){
         return -1;
     }
 
-
-
     return 0;
 }
 
@@ -422,7 +420,7 @@ int SimpleFS_readDir(char** names, DirectoryHandle* d){
 
     FirstDirectoryBlock* fdb = d ->dcb;
     DiskDriver* disk = d ->sfs ->disk;
-
+    
     FirstFileBlock file_to_read;
     int pos_in_names = 0;
 
@@ -430,7 +428,7 @@ int SimpleFS_readDir(char** names, DirectoryHandle* d){
     for(i = 0; i < fdb ->num_entries; i++){
 
         if(fdb ->file_blocks[i] > 0 && DiskDriver_readBlock(disk, &file_to_read, fdb ->file_blocks[i]) != -1){
-            names[pos_in_names] = file_to_read.fcb.name;
+            names[pos_in_names] = strdup(file_to_read.fcb.name);
             pos_in_names++;
         }
     }
@@ -448,7 +446,7 @@ int SimpleFS_readDir(char** names, DirectoryHandle* d){
         int i;
         for(i = 0; i < BLOCK_SIZE-sizeof(BlockHeader)/sizeof(int); i++){
             if(db.file_blocks[i] > 0 && DiskDriver_readBlock(disk, &file_to_read, db.file_blocks[i]) != -1){
-                names[pos_in_names] = file_to_read.fcb.name;
+                names[pos_in_names] = strdup(file_to_read.fcb.name);
                 pos_in_names++;
             }
         }
@@ -457,7 +455,6 @@ int SimpleFS_readDir(char** names, DirectoryHandle* d){
     }
     
     return 0;
-    
 }
 
 int SimpleFS_mkDir(DirectoryHandle* d, char* dirname){
