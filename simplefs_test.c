@@ -68,6 +68,17 @@ int main(int argc, char** argv) {
         printf("FileHandle non creato perchè il file è già esistente(ERROR)\n\n");
     }
 
+    printf("Creo un quarto file chiamato third_file\n");
+    filehandle = SimpleFS_createFile(dir_root, "third_file\0");
+    if(filehandle != NULL){
+        printf("FileHandle creato correttamente(SUCCESS)\n\n");
+        printf("Nome del file creato: %s\n\n", filehandle ->fcb ->fcb.name);
+        SimpleFS_close(filehandle);
+    }
+    else{
+        printf("FileHandle non creato perchè il file è già esistente(ERROR)\n\n");
+    }
+
     printf("\n\n");
 
     printf("TESTS FOR SimpleFS_openFile\n\n");
@@ -105,6 +116,17 @@ int main(int argc, char** argv) {
         SimpleFS_close(file_to_open);
     }
 
+    printf("Provo ad aprie il file 'third_file' nella directory root\n");
+    file_to_open = SimpleFS_openFile(dir_root, "third_file\0");
+    if(file_to_open == NULL){
+        printf("Error in opening file 'third_file'(ERROR)\n\n");
+    }
+    else{
+        printf("File 'third_file' aperto (SUCCESS)\n");
+        printf("Nome del file aperto -> %s\n\n\n", file_to_open ->fcb ->fcb.name);
+        SimpleFS_close(file_to_open);
+    }
+    
     printf("\n\n");
 
     printf("TESTS FOR SimpleFS_readDir\n");
@@ -129,13 +151,65 @@ int main(int argc, char** argv) {
     free(names);
 
     printf("\n\n");
+
     
-    /*
+    printf("TESTS FOR SimpleFS_mkDir\n\n");
+    
+    printf("Creo una sottocartella per la directory 'dir_root' chiamata 'subDir1'\n");
     int res = SimpleFS_mkDir(dir_root, "subDir1");
     if(res == -1){
-        printf("Error in creating new directory");
+        printf("Errore nella creazione della new_directory\n");
+        res = SimpleFS_mkDir(dir_root, "subDir1");
+        if(res == -1){
+            printf("it's impossible to create new directory\n");
+        }
     }
-    */
+    printf("\n\n");
+
+    printf("TESTS FOR SimpleFS_changeDir\n\n");
+    printf("Provo ad andare dalla directory root alla directory subDir2(non esiste)\n");
+
+    res = SimpleFS_changeDir(dir_root, "subDir2");
+    if(res == -1){
+        printf("sub-directory non trovata(SUCCESS)\n\n");
+    }
+    else{
+        printf("Sub-directory trovata(ERROR)\n");
+        printf("Directory corrente: %s\n", dir_root ->dcb ->fcb.name);
+    }
+
+    printf("Provo ad andare dalla directory root alla directory subDir1(esiste)\n");
+    res = SimpleFS_changeDir(dir_root, "subDir1");
+    if(res == -1){
+        printf("sub-directory non trovata(ERROR)\n");
+    }
+    else{
+        printf("Sub-directory trovata(SUCCESS)\n");
+        printf("Directory corrente: %s\n\n", dir_root ->dcb ->fcb.name);
+    }
+
+    printf("Provo ad andare alla directory padre di subDir1 (figlia della radice)\n");
+    res = SimpleFS_changeDir(dir_root, "..");
+    if(res == -1){
+        printf("directory padre non trovata(ERROR)\n");
+    }
+    else{
+        printf("Parent-directory trovata(SUCCESS)\n");
+        printf("Directory corrente: %s\n\n", dir_root ->dcb ->fcb.name);
+    }
+
+    printf("Provo ad andare alla directory padre delle radice (non esiste)\n");
+    res = SimpleFS_changeDir(dir_root, "..");
+    if(res == -1){
+        printf("directory padre non trovata(SUCCESS)\n\n");
+    }
+    else{
+        printf("Parent-directory trovata(ERROR)\n");
+        printf("Directory corrente: %s\n\n", dir_root ->dcb ->fcb.name);
+    }
+
+    free(dir_root ->dcb);
+    free(dir_root);
     
     return 0;
 }
