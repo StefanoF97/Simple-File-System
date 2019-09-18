@@ -138,7 +138,7 @@ FileHandle* SimpleFS_createFile(DirectoryHandle* d, const char* filename){
     }
 
     DirectoryBlock* dirblock;
-    int before_pos;
+    int before_pos = firstdirblock ->fcb.block_in_disk;
     int pos_in_file = 0;
     int whichupdate = 0;
 
@@ -305,6 +305,11 @@ int SimpleFS_seek(FileHandle* f, int pos){
 
     if(f == NULL){
         printf("FileHandle is NULL, nothing to seek\n");
+        return -1;
+    }
+
+    if(pos > f ->fcb ->fcb.size_in_bytes){
+        printf("the position is greater than the written bytes\n");
         return -1;
     }
 
@@ -538,7 +543,7 @@ int SimpleFS_mkDir(DirectoryHandle* d, char* dirname){
     }
 
     int whichupdate = 0;
-    int before_pos;
+    int before_pos = firstdirblock ->fcb.block_in_disk;
     int pos_in_file = 0;
     DirectoryBlock* dirblock;
 
@@ -630,4 +635,86 @@ int SimpleFS_close(FileHandle* f){      //Use to free FileHandle
     free(f->fcb);
     free(f);
     return 0;
+}
+
+int SimpleFS_write(FileHandle* f, void* data, int size){
+
+    if(f == NULL || data == NULL || size <= 0){
+        printf("Parametri passati a SimpleFS_write errati\n");
+        return -1;
+    }
+
+    int bytes_written = 0;
+    int bytes_to_write = size;
+    int difference = f ->pos_in_file;
+
+    if(difference < BLOCK_SIZE - sizeof(FileControlBlock) - sizeof(BlockHeader) && bytes_to_write <= BLOCK_SIZE - sizeof(FileControlBlock) - sizeof(BlockHeader) - difference){     //i tre casi possibile per il first file block
+        memcpy(f ->fcb ->data + difference, data, bytes_to_write);
+        bytes_written = bytes_to_write;
+        updateBlockDisk(f ->sfs ->disk, f ->fcb, f ->fcb ->fcb.block_in_disk);
+        return bytes_written;
+    }
+    else if(difference < BLOCK_SIZE - sizeof(FileControlBlock) - sizeof(BlockHeader) && bytes_to_write > BLOCK_SIZE - sizeof(FileControlBlock) - sizeof(BlockHeader) - difference){
+        memcpy(f ->fcb ->data, data, BLOCK_SIZE - sizeof(FileControlBlock) - sizeof(BlockHeader) - difference);
+        bytes_written += (BLOCK_SIZE - sizeof(FileControlBlock) - sizeof(BlockHeader) - difference);
+        bytes_to_write -= bytes_written;
+        updateBlockDisk(f ->sfs ->disk, f ->fcb, f ->fcb ->fcb.block_in_disk);
+        difference = 0;
+    }
+    else{
+        difference -= BLOCK_SIZE - sizeof(FileControlBlock) - sizeof(BlockHeader);
+    }
+
+    //this is the case when i write to the other file block 
+    
+    int next = f ->fcb ->header.next_block;
+    int blockIndisk = f -> fcb ->fcb.block_in_disk;
+    int blockInfile = f ->fcb ->header.block_in_file;
+    int is_this_first_block = 0;
+    FileBlock fileblock_to_mem;
+    
+    if(next == -1){
+        is_this_first_block = 1;
+    }
+
+    while(bytes_written < size){
+
+        if(next == -1){     //this is the case when i haven't space enough
+            
+            FileBlock f1 = { 0 };   //new FileBlock necessary
+            f1.header.block_in_file = blockInfile + 1;
+            f1.header.next_block = -1;
+            f1.header.previous_block = blockIndisk;
+            next = DiskDriver_getFreeBlock(f ->sfs ->disk, 0);
+
+            if(is_this_first_block == 1){   //it means i'm in FirstFileBlock
+                
+                f ->fcb ->header.next_block = next;
+                updateBlockDisk(f ->sfs ->disk, f ->fcb, f ->fcb ->fcb.block_in_disk);
+                is_this_first_block = 0;  //From this point i'll never be in FirstFileBLock
+            
+            }
+            else{
+                
+                fileblock_to_mem.header.next_block = next;              //update fileblock_to_mem to point to new file block
+                updateBlockDisk(f ->sfs ->disk, &fileblock_to_mem, blockIndisk);
+
+            }
+
+            DiskDriver_writeBlock(f ->sfs ->disk, &f1, next);
+            fileblock_to_mem = f1;
+        }
+
+        //Write conditions are missing
+    }
+
+    
+}
+
+int SimpleFS_read(FileHandle* f, void* data, int size){
+
+}
+
+int SimpleFS_remove(SimpleFS* fs, char* filename){
+
 }
