@@ -705,7 +705,7 @@ int SimpleFS_write(FileHandle* f, void* data, int size){
             fileblock_to_mem = f1;
         }
 
-        //Write conditions are missing
+        //Write conditions are missing, it miss the update of pos_in_file to not cancel new data
     }
 
     
@@ -713,8 +713,248 @@ int SimpleFS_write(FileHandle* f, void* data, int size){
 
 int SimpleFS_read(FileHandle* f, void* data, int size){
 
+    if(f == NULL || data == NULL || size < 0){
+        printf("Parameters are wrong for SimpleFS_read\n");
+        return -1;
+    }
+
+    FirstFileBlock* ffb = f ->fcb;
+    
+    memcpy((char*)data, ffb ->data, BLOCK_SIZE-sizeof(FileControlBlock) - sizeof(BlockHeader));
+    int read_bytes = BLOCK_SIZE-sizeof(FileControlBlock) - sizeof(BlockHeader);
+    size -= read_bytes;
+
+    int ret, next = ffb ->header.next_block;
+    FileBlock fb;
+
+    while(size > 0 && next != -1){
+
+        ret = DiskDriver_readBlock(f ->sfs ->disk, &fb, next);
+        if(ret == -1){
+            printf("Error in reading block from disk\n");
+            return -1;
+        }
+
+        memcpy((char*)data + read_bytes, fb.data, BLOCK_SIZE-sizeof(BlockHeader));
+        read_bytes += BLOCK_SIZE-sizeof(BlockHeader);
+        size -= read_bytes;
+
+    }
+    
+    return read_bytes;
+
 }
 
-int SimpleFS_remove(SimpleFS* fs, char* filename){
+int SimpleFS_remove(DirectoryHandle* d, char* filename){
 
+    //if filename is the name of the root i'll remove all file inside(setting free the bitmap)
+    //else i found file/dir with filename and after i remove his files(setting free the bitmap)t
+
+    if(d == NULL || filename == NULL){
+        printf("Parameters wrong for SimpleFS_remove\n");
+        return -1;
+    }
+
+    FirstFileBlock ffb;         //using for reading from disk...
+    FirstDirectoryBlock* firstdirblock = d ->dcb;
+    DiskDriver* disk = d ->sfs ->disk;
+    int found = 0;
+
+    if(firstdirblock ->num_entries >= 0){
+        
+        //taking FirstDirectoryBlock (and after directory block using blockheader) i can try to find if there is just the same file i want to create
+        int i;
+        
+        for(i = 0; i < firstdirblock ->num_entries; i++){
+            
+            if(firstdirblock ->file_blocks[i] > 0 && (DiskDriver_readBlock(disk, &ffb, firstdirblock ->file_blocks[i]) != -1)){  //if block is empty is useless to read it
+                if(strcmp(ffb.fcb.name, filename) == 0){
+                    printf("File to remove exists\n");
+                    found = 1;
+                    break;
+                }
+            }
+        }
+
+        if(!found){
+
+            int nextdir = firstdirblock ->header.next_block;
+            DirectoryBlock* dirblock;
+
+            while(1){
+
+                if(nextdir == -1)
+                    break;
+
+                if(DiskDriver_readBlock(disk, dirblock, nextdir) == -1){
+                    printf("impossible to read directories after firstdirectory\n");
+                    return NULL;
+                }
+
+                int i;
+                for(i = 0; i < BLOCK_SIZE-sizeof(BlockHeader)/sizeof(int); i++){
+                
+                    if(dirblock ->file_blocks[i] > 0 && (DiskDriver_readBlock(disk, &ffb, dirblock ->file_blocks[i]) != -1)){  //if block is empty is useless to read it
+                        if(strcmp(ffb.fcb.name, filename) == 0){
+                            printf("File to remove exists\n");
+                            break;
+                        }
+                    }
+                }
+
+                nextdir = dirblock ->header.next_block;
+            }
+        }
+    }
+    else{
+        printf("Nothing to read, directory is empty");
+        return NULL;
+    }
+        
+    //if arrived here, there aren't any file that has the same filename, so i can create it
+    
+    if(ffb.fcb.is_dir == 1){        //case directory to delete
+        return RemoveDir((FirstDirectoryBlock*)&ffb, firstdirblock, disk);
+    }
+    else{                           //case file to delete
+        return RemoveFile(&ffb, firstdirblock, disk);
+    }
+    
+    return -1;
+
+}
+
+int RemoveFile(FirstFileBlock* ffb, FirstDirectoryBlock* fdb, DiskDriver* disk){
+    
+    if(ffb == NULL || fdb == NULL || disk == NULL){
+        printf("Parameters are wrong in RemoveFile\n");
+        return -1;
+    }
+
+    // 1)eliminare lista file blocks
+    
+    int ret; 
+    int next = ffb ->header.next_block;
+    int previous = -1;
+    int first_file_block = ffb ->fcb.block_in_disk;
+    
+    FileBlock fb;
+    DiskDriver_freeBlock(disk, ffb ->fcb.block_in_disk);
+
+    while(next != -1){
+
+        ret = DiskDriver_readBlock(disk, &fb, next);
+        if(ret == -1){
+            printf("Error in reading block from disk\n");
+            return -1;
+        }
+
+        previous = next;
+        next = ffb ->header.next_block;
+        DiskDriver_freeBlock(disk, previous);
+    }
+
+    // 2)eliminare la entry da file blocks
+
+    next = fdb ->header.next_block;
+    previous = -1;
+    
+    DirectoryBlock db;
+    int found = 0;
+
+    int i;
+    for(i = 0; i < (BLOCK_SIZE - sizeof(BlockHeader) -sizeof(FileControlBlock) -sizeof(int))/sizeof(int); i++){
+        if(fdb ->file_blocks[i] == first_file_block){
+            fdb ->file_blocks[i] = 0;
+            found = 1;
+            break;
+        }
+    }
+    
+    if(!found){
+        while(next != -1){
+            
+            if(DiskDriver_readBlock(disk, &db, next) == -1){
+                printf("Cannot read directory\n");
+                return -1;
+            }
+
+            for(i = 0; i < BLOCK_SIZE-sizeof(BlockHeader)/sizeof(int); i++){
+                if(fdb ->file_blocks[i] == first_file_block){
+                    fdb ->file_blocks[i] = 0;
+                    break;
+                }
+            }
+
+            next = db.header.next_block;
+        }
+    }
+
+    // 3)entries --
+    fdb ->num_entries --;
+    updateBlockDisk(disk, fdb, fdb ->fcb.block_in_disk);
+
+    return 0;
+}
+
+int RemoveDir(FirstDirectoryBlock* ffb, FirstDirectoryBlock* fdb, DiskDriver* disk){
+    
+    if(ffb == NULL || fdb == NULL || disk == NULL){
+        printf("Parameters are wrong in RemoveFile\n");
+        return -1;
+    }
+
+    //1)search if ffb is empty
+    if(ffb ->num_entries != 0){
+        printf("The directory is not empty, cannot remove it\n");
+        return 0;
+    }
+
+    //2)eliminare directory
+    int first_file_block = ffb ->fcb.block_in_disk;
+    
+    DiskDriver_freeBlock(disk, ffb ->fcb.block_in_disk);
+
+    // 3)eliminare la entry da file blocks
+
+    int next = fdb ->header.next_block;
+    int previous = -1;
+    
+    DirectoryBlock db;
+    int found = 0;
+
+    int i;
+    for(i = 0; i < (BLOCK_SIZE - sizeof(BlockHeader) -sizeof(FileControlBlock) -sizeof(int))/sizeof(int); i++){
+        if(fdb ->file_blocks[i] == first_file_block){
+            fdb ->file_blocks[i] = 0;
+            found = 1;
+            break;
+        }
+    }
+
+    if(!found){ 
+        while(next != -1){
+            
+            if(DiskDriver_readBlock(disk, &db, next) == -1){
+                printf("Cannot read directory\n");
+                return -1;
+            }
+
+            for(i = 0; i < BLOCK_SIZE-sizeof(BlockHeader)/sizeof(int); i++){
+                if(fdb ->file_blocks[i] == first_file_block){
+                    fdb ->file_blocks[i] = 0;
+                    break;
+                }
+            }
+
+            next = db.header.next_block;
+        }
+    }
+
+    // 4)entries --
+    fdb ->num_entries --;
+
+    updateBlockDisk(disk, fdb, fdb ->fcb.block_in_disk);
+    return 0;    
+    
 }
