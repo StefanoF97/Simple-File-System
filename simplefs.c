@@ -528,7 +528,7 @@ int SimpleFS_mkDir(DirectoryHandle* d, char* dirname){
         return -1;
     }
 
-    FirstDirectoryBlock* new_directory = calloc(1, sizeof(FirstDirectoryBlock));
+    FirstDirectoryBlock* new_directory = calloc(1, sizeof(FirstFileBlock));
     new_directory ->fcb.is_dir = 1;
     new_directory ->header.block_in_file = 0;
     new_directory ->header.next_block = -1;
