@@ -233,7 +233,7 @@ int updateBlockDisk(DiskDriver* disk, void* src, int block_num){
         written_bytes += ret;
     }
 
-    //printf("Byte scritti: %d\n", written_bytes);
+    printf("Byte scritti: %d\n", written_bytes);
     
     return 0;   //se si ritorna 0 è andato tutto bene
 
