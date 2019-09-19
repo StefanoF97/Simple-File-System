@@ -3,6 +3,7 @@
 #include "bitmap.h"
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 int main(int argc, char** argv) {
   
@@ -208,6 +209,89 @@ int main(int argc, char** argv) {
         printf("Directory corrente: %s\n\n", dir_root ->dcb ->fcb.name);
     }
 
+    printf("TESTS for SimpleFS_write\n\n");
+
+    printf("Provo a scrivere in un nuovo file 'write_file' una stringa abbastanza lunga\n");
+    filehandle = SimpleFS_createFile(dir_root, "write_file\0");
+    if(filehandle == NULL){
+        printf("Error in creating a file(ERROR)\n");
+    }
+    else{
+        printf("FileHandle creato correttamente(SUCCESS)\n");
+        printf("Nome del file creato: %s\n", filehandle ->fcb ->fcb.name);
+    }
+
+    char* frase = (char*)malloc(sizeof(char) * 30);
+    for(i = 0; i < 30; i++){
+        frase[i] = 'a';
+    }
+    
+    int bytes = SimpleFS_write(filehandle, frase, 30);
+    if(bytes != -1){
+        printf("Il file è stato scritto -> posizione nel file(quanti byte in totale): %d -> dati: %s (SUCCESS)\n\n", filehandle ->pos_in_file, filehandle ->fcb ->data);
+    }
+    else{
+        printf("Errore nella scrittura del file write_file(ERROR)\n");
+    }
+    free(frase);
+
+    printf("Provo a scrivere in un nuovo file 'write_file2' una stringa abbastanza lunga\n");
+    FileHandle* filehandleW = SimpleFS_createFile(dir_root, "write_file2\0");
+    if(filehandleW == NULL){
+        printf("Error in creating a file(ERROR)\n");
+    }
+    else{
+        printf("FileHandle creato correttamente(SUCCESS)\n");
+        printf("Nome del file creato: %s\n", filehandleW ->fcb ->fcb.name);
+    }
+
+    frase = (char*)malloc(sizeof(char) * 500);
+    for(i = 0; i < 499; i++){
+        frase[i] = 'b';
+    }
+    frase[499] = 'c';
+
+    bytes = SimpleFS_write(filehandleW, frase, 500);
+    if(bytes != -1){
+        printf("Il file è stato scritto -> posizione nel file(quanti byte in totale): %d -> dati(quelli che sono entrati in uno...) : %s (SUCCESS)\n\n", filehandleW ->pos_in_file, filehandleW ->fcb ->data);
+    }
+    else{
+        printf("Errore nella scrittura del file write_file(ERROR)\n");
+    }
+    free(frase);
+
+    printf("TESTS for SimpleFS_read\n\n");
+
+    printf("Provo a leggere il file ' write_file ' appena scritto\n");
+
+    frase = calloc(30, sizeof(char));
+
+    bytes = SimpleFS_read(filehandle, frase, 30);
+
+    if(bytes != -1){
+        printf("Il file %s è stato letto -> dati TOTALI: %s (SUCCESS) \n\n", filehandle ->fcb ->fcb.name, frase);
+    }
+    else{
+        printf("Errore nella lettura del file %s (ERROR) \n\n", filehandle ->fcb ->fcb.name);
+    }
+    free(frase);
+    
+    printf("Provo a leggere il file ' write_file2 ' appena scritto\n");
+
+    frase = calloc(500, sizeof(char));
+
+    bytes = SimpleFS_read(filehandleW, frase, 500);
+    
+    if(bytes != -1){
+        printf("Il file %s è stato letto -> dati TOTALI: %s (SUCCESS) \n\n", filehandleW ->fcb ->fcb.name, frase);
+    }
+    else{
+        printf("Errore nella lettura del file %s (ERROR) \n\n", filehandleW ->fcb ->fcb.name);
+    }
+    free(frase);
+
+    SimpleFS_close(filehandle);
+    SimpleFS_close(filehandleW);
     free(dir_root ->dcb);
     free(dir_root);
     
