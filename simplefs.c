@@ -659,7 +659,7 @@ int SimpleFS_write(FileHandle* f, void* data, int size){
     else if(difference < BLOCK_SIZE - sizeof(FileControlBlock) - sizeof(BlockHeader) && bytes_to_write > BLOCK_SIZE - sizeof(FileControlBlock) - sizeof(BlockHeader) - difference){
         memcpy(f ->fcb ->data + difference, data, BLOCK_SIZE - sizeof(FileControlBlock) - sizeof(BlockHeader) - difference);
         bytes_written += (BLOCK_SIZE - sizeof(FileControlBlock) - sizeof(BlockHeader) - difference);
-        bytes_to_write -= bytes_written;
+        bytes_to_write = size - bytes_written;
         updateBlockDisk(f ->sfs ->disk, f ->fcb, f ->fcb ->fcb.block_in_disk);
         difference = 0;
     }
@@ -755,11 +755,11 @@ int SimpleFS_read(FileHandle* f, void* data, int size){
     FirstFileBlock* ffb = f ->fcb;
     int read_bytes;
     
-    if(size <= BLOCK_SIZE - sizeof(FileControlBlock) - sizeof(BlockHeader)){
+    if(size < BLOCK_SIZE - sizeof(FileControlBlock) - sizeof(BlockHeader)){
 
         memcpy((char*)data, ffb ->data, size);
-        read_bytes = BLOCK_SIZE-sizeof(FileControlBlock) - sizeof(BlockHeader);
-        size -= read_bytes;
+        read_bytes = size;
+        size = -1;
     
     }
     else{
@@ -779,13 +779,27 @@ int SimpleFS_read(FileHandle* f, void* data, int size){
 
         ret = DiskDriver_readBlock(f ->sfs ->disk, &fb, next);
         if(ret == -1){
+            
             printf("Error in reading block from disk\n");
             return -1;
+        
         }
 
-        memcpy((char*)data + read_bytes, fb.data, BLOCK_SIZE-sizeof(BlockHeader));
-        read_bytes += BLOCK_SIZE - sizeof(BlockHeader);
-        size -= read_bytes;
+        if(size < BLOCK_SIZE-sizeof(BlockHeader)){
+
+            memcpy((char*)data + read_bytes, fb.data, size);
+            read_bytes += size;
+            size = -1;
+
+        }
+        else{
+            
+            memcpy((char*)data + read_bytes, fb.data, BLOCK_SIZE-sizeof(BlockHeader));
+            read_bytes += BLOCK_SIZE - sizeof(BlockHeader);
+            size -= read_bytes;
+            
+        }
+
         next = fb.header.next_block;
 
     }
