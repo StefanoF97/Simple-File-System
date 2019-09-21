@@ -166,11 +166,14 @@ int main(int argc, char** argv) {
             printf("Errore nella creazione della new_directory\n");
             res = SimpleFS_mkDir(dir_root, "subDir1");
             if(res == -1){
-                printf("it's impossible to create new directory\n");
+                printf("it's impossible to create new directory (ERROR)\n\n");
             }
         }
-        printf("\n\n");
-
+        else{
+            printf("Directory creata con successo (SUCCESS) \n\n");
+        }
+        
+        
         printf("\e[1;32mTESTS FOR SimpleFS_changeDir\n\n\e[00m");
         printf("Provo ad andare dalla directory root alla directory subDir2(non esiste)\n");
 
@@ -310,7 +313,7 @@ int main(int argc, char** argv) {
         //
         
         if(bytes != -1){
-            printf("Il file %s è stato letto -> dati TOTALI: %s (SUCCESS) \n\n", filehandleW ->fcb ->fcb.name, frase);
+            printf("Il file %s è stato letto -> dati TOTALI: %s (SUCCESS) \n\n\n", filehandleW ->fcb ->fcb.name, frase);
         }
         else{
             printf("Errore nella lettura del file %s (ERROR) \n\n\n", filehandleW ->fcb ->fcb.name);
@@ -322,13 +325,99 @@ int main(int argc, char** argv) {
 
         printf("\e[1;32mTESTS for SimpleFS_remove\n\n\e[00m");
 
+        printf("Provo a eliminare il file ' file_write3 ' (non esiste) \n");
+        ret = SimpleFS_remove(dir_root, "write_file3\0");
+        if(ret == -1){
+            printf("Imposibile eliminare il file write_file3 (SUCCESS) \n\n");
+        }
+        else{
+            printf("Il file write_file3 è stato eliminato (ERROR)\n\n");
+        }
+
+        printf("Provo a eliminare il file ' second_file ' (esiste) \n");
+        ret = SimpleFS_remove(dir_root, "second_file\0");
+        if(ret == -1){
+            printf("Imposibile eliminare il file ' second_file ' (ERROR) \n\n");
+        }
+        else{
+            printf("Il file ' second_file ' è stato eliminato (SUCCESS)\n\n");
+        }
+
+        printf("Provo a vedere se effettivamente il file ' second_file ' è stato eliminato provando ad aprirlo...\n");
+        FileHandle* to_check_if_is_deleted = SimpleFS_openFile(dir_root, "second_file\0");
+        if(to_check_if_is_deleted == NULL){
+            printf("Impossibile aprire il file ' second_file ' (SUCCESS) \n\n");
+        }
+        else{
+            printf("File 'second_file' aperto (ERROR)\n");
+            printf("Nome del file aperto -> %s\n\n", to_check_if_is_deleted ->fcb ->fcb.name);
+            SimpleFS_close(to_check_if_is_deleted);
+        }
+
+        printf("Leggo tutti i file a partire dalla radice per cercare di trovare il file eliminato....");
+        names =(char**)malloc(sizeof(char*) * dir_root ->dcb ->num_entries);
+        ret = SimpleFS_readDir(names, dir_root);
+        if(ret == -1){
+            printf("Impossibile leggere la directory root (ERROR) \n\n\n");
+        }
+        else{
+            printf("\nLettura della directory avvenuta\n");
+            printf("File trovati: ");
+            for(i = 0; i < dir_root ->dcb ->num_entries; i++){
+                printf("%s - ", names[i]);
+            }
+            printf("(SUCCESS)\n\n");
+        }
+        for(i = 0; i < dir_root ->dcb ->num_entries; i++){
+            free(names[i]);
+        }
+        free(names);
+
+        printf("Provo a eliminare la directory ' subDir2 ' (non esiste)\n");
+        ret = SimpleFS_remove(dir_root, "subDir2");
+        if(ret == -1){
+            printf("Impossibile eliminare la directory ' subDir2 ' (SUCCESS)\n\n\n");
+        }    
+        else{ 
+            printf("La directory ' subDir2 ' è stata eliminata (ERROR)\n\n\n");
+        }
+
+        printf("Provo a eliminare la directory ' subDir1 ' (esiste)\n");
+        ret = SimpleFS_remove(dir_root, "subDir1");
+        if(ret == -1){
+            printf("Impossibile eliminare la directory ' subDir1 ' (ERROR)\n\n\n");
+        }    
+        else{ 
+            printf("La directory ' subDir1 ' è stata eliminata (SUCCESS)\n\n\n");
+        }
+
+        printf("Leggo tutti i file a partire dalla radice per cercare di trovare la directory eliminata....");
+        names =(char**)malloc(sizeof(char*) * dir_root ->dcb ->num_entries);
+        ret = SimpleFS_readDir(names, dir_root);
+        if(ret == -1){
+            printf("Impossibile leggere la directory root (ERROR) \n\n\n");
+        }
+        else{
+            printf("\nLettura della directory avvenuta\n");
+            printf("File trovati: ");
+            for(i = 0; i < dir_root ->dcb ->num_entries; i++){
+                printf("%s - ", names[i]);
+            }
+            printf("(SUCCESS)\n\n");
+        }
+        for(i = 0; i < dir_root ->dcb ->num_entries; i++){
+            free(names[i]);
+        }
+        free(names);
+
         free(dir_root ->dcb);
         free(dir_root);
-        
     }
     else{
         
-        printf("This is the case when Disk has just been created\n\n\n");
+        printf("Questo è il caso in cui il disco è già stato creato\n\n\n");
+        free(dir_root ->dcb);
+        free(dir_root);
 
     }
     
