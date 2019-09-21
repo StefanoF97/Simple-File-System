@@ -11,8 +11,8 @@
      - data blocks
      - directory blocks
 
-     A data block are "random" information
+     A data block are "random" information.
      A directory block contains a sequence of
      structs of type "directory_entry",
      containing the blocks where the files in that folder start
-     and if they are directory themselves
+     and if they are directory themselves.
