@@ -433,7 +433,7 @@ int SimpleFS_readDir(char** names, DirectoryHandle* d){
 
     if(fdb ->num_entries > 0){
         int i;
-        for(i = 0; i < fdb ->num_entries; i++){
+        for(i = 0; i < (BLOCK_SIZE - sizeof(BlockHeader) -sizeof(FileControlBlock) -sizeof(int))/sizeof(int); i++){
 
             if(fdb ->file_blocks[i] > 0 && DiskDriver_readBlock(disk, &file_to_read, fdb ->file_blocks[i]) != -1){
                 names[pos_in_names] = strdup(file_to_read.fcb.name);
@@ -860,6 +860,7 @@ int SimpleFS_remove(DirectoryHandle* d, char* filename){
                     if(dirblock ->file_blocks[i] > 0 && (DiskDriver_readBlock(disk, &ffb, dirblock ->file_blocks[i]) != -1)){  //if block is empty is useless to read it
                         if(strcmp(ffb.fcb.name, filename) == 0){
                             printf("File to remove exists\n");
+                            found = 1;
                             break;
                         }
                     }
@@ -874,12 +875,19 @@ int SimpleFS_remove(DirectoryHandle* d, char* filename){
         return -1;
     }
         
+    if(!found){
+        printf("The file you want to remove doesn't exist\n");
+        return -1;
+    }
+
     //if arrived i've found the file that i want to delete
-    
+
     if(ffb.fcb.is_dir == 1){        //case directory to delete
-        return RemoveDir((FirstDirectoryBlock*)&ffb, firstdirblock, disk);
+        printf("Si tratta di una directory da eliminare\n");
+        return RemoveDir((FirstDirectoryBlock*)(&ffb), firstdirblock, disk);
     }
     else{                           //case file to delete
+        printf("Si tratta di un file da eliminare\n");
         return RemoveFile(&ffb, firstdirblock, disk);
     }
     
@@ -919,10 +927,8 @@ int RemoveFile(FirstFileBlock* ffb, FirstDirectoryBlock* fdb, DiskDriver* disk){
 
     // 2)eliminare la entry da file blocks
 
-    next = fdb ->header.next_block;
-    previous = -1;
-    
     DirectoryBlock db;
+    next = fdb ->header.next_block;
     int found = 0;
 
     int i;
@@ -935,6 +941,7 @@ int RemoveFile(FirstFileBlock* ffb, FirstDirectoryBlock* fdb, DiskDriver* disk){
     }
     
     if(!found){
+
         while(next != -1){
             
             if(DiskDriver_readBlock(disk, &db, next) == -1){
@@ -943,8 +950,8 @@ int RemoveFile(FirstFileBlock* ffb, FirstDirectoryBlock* fdb, DiskDriver* disk){
             }
 
             for(i = 0; i < BLOCK_SIZE-sizeof(BlockHeader)/sizeof(int); i++){
-                if(fdb ->file_blocks[i] == first_file_block){
-                    fdb ->file_blocks[i] = 0;
+                if(db.file_blocks[i] == first_file_block){
+                    db.file_blocks[i] = 0;
                     break;
                 }
             }
@@ -981,7 +988,6 @@ int RemoveDir(FirstDirectoryBlock* ffb, FirstDirectoryBlock* fdb, DiskDriver* di
     // 3)eliminare la entry da file blocks
 
     int next = fdb ->header.next_block;
-    int previous = -1;
     
     DirectoryBlock db;
     int found = 0;
@@ -996,6 +1002,7 @@ int RemoveDir(FirstDirectoryBlock* ffb, FirstDirectoryBlock* fdb, DiskDriver* di
     }
 
     if(!found){ 
+        
         while(next != -1){
             
             if(DiskDriver_readBlock(disk, &db, next) == -1){
