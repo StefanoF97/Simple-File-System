@@ -1,12 +1,13 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <unistd.h>
 #include "disk_driver.h"
 #include "simplefs.h"
 
 int main(int argc, char* argv[]){
 
-    printf("\nThese tests can be executed if disk is present or if disk must be created...\n\n\n");
+    printf("\nStarting the tests for the disk...\n\n\n");
     
     DiskDriver* diskdriver = (DiskDriver*)malloc(sizeof(DiskDriver));
     const char* filename = "./disk.txt";
