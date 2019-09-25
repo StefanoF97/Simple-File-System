@@ -22,6 +22,8 @@ DirectoryHandle* SimpleFS_init(SimpleFS* fs, DiskDriver* disk){
     FirstDirectoryBlock* fsb = (FirstDirectoryBlock*)malloc(sizeof(FirstDirectoryBlock));
     if(DiskDriver_readBlock(disk, fsb, 0) == -1){
         printf("Error in reading in block 0 for FirstDirectoryBlock\n");
+        //free(dh);           //IMPORTANTE E DA VERIFICARE
+        //free(fsb);          //IMPORTANTE E DA VERIFICARE
         return NULL;
     }
 
@@ -48,6 +50,7 @@ void SimpleFS_format(SimpleFS* fs){
     fdb.header.block_in_file = 0;     //repeatedly position 0
     
     //no need to clear bitmap block because in DiskDriver_init i've just cleared
+    //bzero(fs ->disk, fs ->disk ->header ->bitmap_entries);
 
     if(DiskDriver_writeBlock(fs ->disk, &fdb, 0) == -1){
         printf("Error in writing disk at position 0 (for FirstDirectoryBlock) in SimpleFS_format\n");
@@ -73,7 +76,7 @@ FileHandle* SimpleFS_createFile(DirectoryHandle* d, const char* filename){
         //taking FirstDirectoryBlock (and after directory block using blockheader) i can try to find if there is just the same file i want to create
         int i;
         
-        for(i = 0; i < firstdirblock ->num_entries; i++){
+        for(i = 0; i < (BLOCK_SIZE - sizeof(BlockHeader) -sizeof(FileControlBlock) -sizeof(int))/sizeof(int); i++){
             
             if(firstdirblock ->file_blocks[i] > 0 && (DiskDriver_readBlock(disk, &ffb, firstdirblock ->file_blocks[i]) != -1)){  //if block is empty is useless to read it
                 if(strcmp(ffb.fcb.name, filename) == 0){
@@ -217,6 +220,8 @@ FileHandle* SimpleFS_createFile(DirectoryHandle* d, const char* filename){
     else{
         dirblock ->header.next_block = pos_newdir;
         updateBlockDisk(disk, dirblock, before_pos);
+        dirblock_new.file_blocks[0] = free_block_to_mem;
+        updateBlockDisk(disk, &dirblock_new, pos_newdir);
         firstdirblock ->num_entries++;
         updateBlockDisk(disk, firstdirblock, firstdirblock ->fcb.block_in_disk);
     }
@@ -242,6 +247,7 @@ FileHandle* SimpleFS_openFile(DirectoryHandle* d, const char* filename){
     SimpleFS* sfs = d ->sfs;
     FirstDirectoryBlock* firstDirBlock = d ->dcb;
     FileHandle* filehandle_toFind = (FileHandle*)malloc(sizeof(FileHandle));
+    FirstFileBlock* ffb;
 
     if(firstDirBlock ->num_entries > 0){
         
@@ -249,10 +255,10 @@ FileHandle* SimpleFS_openFile(DirectoryHandle* d, const char* filename){
         filehandle_toFind ->directory = firstDirBlock;
         filehandle_toFind ->pos_in_file = 0;
 
-        FirstFileBlock* ffb = (FirstFileBlock*)malloc(sizeof(FirstFileBlock));
+        ffb = (FirstFileBlock*)malloc(sizeof(FirstFileBlock));
         int i;
         
-        for(i = 0; i < firstDirBlock ->num_entries; i++){
+        for(i = 0; i < (BLOCK_SIZE - sizeof(BlockHeader) -sizeof(FileControlBlock) -sizeof(int))/sizeof(int); i++){
             
             if(firstDirBlock ->file_blocks[i] > 0 && (DiskDriver_readBlock(sfs ->disk, ffb, firstDirBlock ->file_blocks[i]) != -1)){  //if block is empty is useless to read it
                 if(strcmp(ffb ->fcb.name, filename) == 0){
@@ -293,11 +299,13 @@ FileHandle* SimpleFS_openFile(DirectoryHandle* d, const char* filename){
     }
     else{
         printf("Nothing to open, directory is empty\n");
+        //free(filehandle_toFind);   //IMPORTANTE E DA VERIFICARE
         return NULL;
     }
     
     printf("The file doesn't exist, please try with a different file\n");
     free(filehandle_toFind);
+    //free(ffb);                    //IMPORTANTE E DA VERIFICARE
     return NULL;
 }
 
@@ -317,6 +325,7 @@ int SimpleFS_seek(FileHandle* f, int pos){
 
     return 0;
 }
+
 
 int SimpleFS_changeDir(DirectoryHandle* d, char* dirname){
 
@@ -368,12 +377,12 @@ int SimpleFS_changeDir(DirectoryHandle* d, char* dirname){
 
     SimpleFS* sfs = d ->sfs;
     FirstDirectoryBlock* firstDirBlock = d ->dcb;
-    FirstDirectoryBlock* DirToFind = (FirstDirectoryBlock*)malloc(sizeof(FirstDirectoryBlock));
+    FirstDirectoryBlock* DirToFind = (FirstDirectoryBlock*)malloc(sizeof(FirstDirectoryBlock)); 
 
     if(firstDirBlock ->num_entries > 0){
 
         int i;
-        for(i = 0; i < firstDirBlock ->num_entries; i++){
+        for(i = 0; i < (BLOCK_SIZE - sizeof(BlockHeader) -sizeof(FileControlBlock) -sizeof(int))/sizeof(int); i++){
             if(firstDirBlock ->file_blocks[i] > 0 && (DiskDriver_readBlock(sfs ->disk, DirToFind, firstDirBlock ->file_blocks[i])) != -1){
                 if(strcmp(DirToFind ->fcb.name, dirname) == 0){
                     printf("Directory found, making side-effect\n");
@@ -419,7 +428,6 @@ int SimpleFS_changeDir(DirectoryHandle* d, char* dirname){
 
     printf("Impossible to change directory, there's not in the disk\n");
     return -1;
-
 }
 
 
@@ -452,7 +460,7 @@ int SimpleFS_readDir(char** names, DirectoryHandle* d){
             }
 
             int i;
-            for(i = 0; i < BLOCK_SIZE-sizeof(BlockHeader)/sizeof(int); i++){
+            for(i = 0; i < BLOCK_SIZE - sizeof(BlockHeader)/sizeof(int); i++){
                 if(db.file_blocks[i] > 0 && DiskDriver_readBlock(disk, &file_to_read, db.file_blocks[i]) != -1){
                     names[pos_in_names] = strdup(file_to_read.fcb.name);
                     pos_in_names++;
@@ -482,7 +490,7 @@ int SimpleFS_mkDir(DirectoryHandle* d, char* dirname){
 
     if(firstdirblock ->num_entries > 0){
         int i;
-        for(i = 0; i < firstdirblock ->num_entries; i++){
+        for(i = 0; i < (BLOCK_SIZE - sizeof(BlockHeader) -sizeof(FileControlBlock) -sizeof(int))/sizeof(int); i++){
             if(firstdirblock ->file_blocks[i] > 0 && (DiskDriver_readBlock(disk, &fd, firstdirblock ->file_blocks[i])) != -1){
                 if(strcmp(fd.fcb.name, dirname) == 0){
                         printf("Directory already exists, change dirname please\n");
@@ -523,12 +531,12 @@ int SimpleFS_mkDir(DirectoryHandle* d, char* dirname){
     //printf("passato qui(caso in cui non si trovano directory con lo stesso nome)\n");
 
     int free_block_to_mem;
-    if((free_block_to_mem = DiskDriver_getFreeBlock(disk, 0)) == -1){
+    if((free_block_to_mem = DiskDriver_getFreeBlock(disk, disk ->header ->first_free_block)) == -1){
         printf("No free blocks in the disk\n");
         return -1;
     }
 
-    FirstDirectoryBlock* new_directory = calloc(1, sizeof(FirstFileBlock));
+    FirstDirectoryBlock* new_directory = calloc(1, sizeof(FirstDirectoryBlock));
     new_directory ->fcb.is_dir = 1;
     new_directory ->header.block_in_file = 0;
     new_directory ->header.next_block = -1;
@@ -541,6 +549,8 @@ int SimpleFS_mkDir(DirectoryHandle* d, char* dirname){
         printf("Impossible to write new directory on disk\n");
         return -1;
     }
+
+    //free(new_directory);    //IMPORTANTE E DA VERIFICARE
 
     int whichupdate = 0;
     int before_pos = firstdirblock ->fcb.block_in_disk;
@@ -606,7 +616,7 @@ int SimpleFS_mkDir(DirectoryHandle* d, char* dirname){
     dirblock_new.file_blocks[0] = free_block_to_mem;
 
     int pos_newdir;
-    if((pos_newdir = DiskDriver_getFreeBlock(disk, 0)) == -1){
+    if((pos_newdir = DiskDriver_getFreeBlock(disk, disk ->header ->first_free_block)) == -1){
         printf("Cannot find free space for new directory\n");
         return -1;
     }
@@ -624,6 +634,8 @@ int SimpleFS_mkDir(DirectoryHandle* d, char* dirname){
     else{
         dirblock ->header.next_block = pos_newdir;
         updateBlockDisk(disk, dirblock, before_pos);
+        dirblock_new.file_blocks[0] = free_block_to_mem;
+        updateBlockDisk(disk, &dirblock_new, pos_newdir);
         firstdirblock ->num_entries++;
         updateBlockDisk(disk, firstdirblock, firstdirblock ->fcb.block_in_disk);
     }
@@ -674,7 +686,7 @@ int SimpleFS_write(FileHandle* f, void* data, int size){
     int blockInfile = f ->fcb ->header.block_in_file;
     int is_this_first_block = 0;
     FileBlock fileblock_to_mem;
-    
+   
     if(next == -1){
         is_this_first_block = 1;
     }
@@ -689,7 +701,8 @@ int SimpleFS_write(FileHandle* f, void* data, int size){
             f1.header.block_in_file = blockInfile + 1;
             f1.header.next_block = -1;
             f1.header.previous_block = blockIndisk;
-            next = DiskDriver_getFreeBlock(f ->sfs ->disk, 0);
+            
+            next = DiskDriver_getFreeBlock(f ->sfs ->disk, blockIndisk);
 
             if(is_this_first_block == 1){   //it means i'm in FirstFileBlock
                 
@@ -732,16 +745,12 @@ int SimpleFS_write(FileHandle* f, void* data, int size){
             difference -= BLOCK_SIZE - sizeof(BlockHeader);
         }
 
+        printf("next: %d\n", next);
         blockIndisk = next;
         next = fileblock_to_mem.header.next_block;
         blockInfile = fileblock_to_mem.header.block_in_file;
-
     }
 
-    f ->pos_in_file += bytes_written;
-    f ->fcb ->fcb.size_in_bytes = f ->pos_in_file;
-    updateBlockDisk(f ->sfs ->disk, f ->fcb, f ->fcb ->fcb.block_in_disk);
-    
     return bytes_written;
 }
 
@@ -764,7 +773,7 @@ int SimpleFS_read(FileHandle* f, void* data, int size){
     }
     else{
         
-        memcpy((char*)data, ffb ->data, BLOCK_SIZE-sizeof(FileControlBlock) - sizeof(BlockHeader)); 
+        memcpy((char*)data, ffb ->data, BLOCK_SIZE - sizeof(FileControlBlock) - sizeof(BlockHeader)); 
         read_bytes = BLOCK_SIZE - sizeof(FileControlBlock) - sizeof(BlockHeader);
         size -= read_bytes;
 
@@ -785,7 +794,7 @@ int SimpleFS_read(FileHandle* f, void* data, int size){
         
         }
 
-        if(size < BLOCK_SIZE-sizeof(BlockHeader)){
+        if(size < BLOCK_SIZE - sizeof(BlockHeader)){
 
             memcpy((char*)data + read_bytes, fb.data, size);
             read_bytes += size;
