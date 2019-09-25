@@ -43,6 +43,7 @@ int BitMap_get(BitMap* bmap, int start, int status){
 
 int BitMap_set(BitMap* bmap, int pos, int status){
     
+    /*
     if (bmap == NULL || pos < 0 || status < 0 || pos >= bmap ->num_bits)
         return -1; 
 
@@ -52,7 +53,20 @@ int BitMap_set(BitMap* bmap, int pos, int status){
     
     bmap ->entries[appobmap.entry_num] = (bmap ->entries[appobmap.entry_num] & ~mask) | ((status << pos) & mask);
     return abs((bmap ->entries[appobmap.entry_num] & ~mask) | ((status << pos) & mask));
-        
+    */
+
+    if(pos >= bmap->num_bits) return -1;                                
+    
+    BitMapEntryKey bmapentrykey = BitMap_blockToIndex(pos);     //ricavo la entry nella posizione desiderata senza bisogno di un ciclo
+                
+    if(status == 1){        //sfrutto il solito offset in modo da ottenere la posizione giusta del bit tramite maschera
+        bmap->entries[bmapentrykey.entry_num] = bmap->entries[bmapentrykey.entry_num] | 1 << bmapentrykey.bit_num; 
+        return bmap->entries[bmapentrykey.entry_num] | 1 << bmapentrykey.bit_num;
+    }
+    else{
+        bmap->entries[bmapentrykey.entry_num] = bmap->entries[bmapentrykey.entry_num] & (~(1 << bmapentrykey.bit_num));
+        return bmap->entries[bmapentrykey.entry_num] & (~(1 << bmapentrykey.bit_num));
+    }
 }
 
 
