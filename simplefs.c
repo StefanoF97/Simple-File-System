@@ -22,8 +22,8 @@ DirectoryHandle* SimpleFS_init(SimpleFS* fs, DiskDriver* disk){
     FirstDirectoryBlock* fsb = (FirstDirectoryBlock*)malloc(sizeof(FirstDirectoryBlock));
     if(DiskDriver_readBlock(disk, fsb, 0) == -1){
         printf("Error in reading in block 0 for FirstDirectoryBlock\n");
-        //free(dh);           //IMPORTANTE E DA VERIFICARE
-        //free(fsb);          //IMPORTANTE E DA VERIFICARE
+        free(dh);           //IMPORTANTE E DA VERIFICARE
+        free(fsb);          //IMPORTANTE E DA VERIFICARE
         return NULL;
     }
 
@@ -299,13 +299,13 @@ FileHandle* SimpleFS_openFile(DirectoryHandle* d, const char* filename){
     }
     else{
         printf("Nothing to open, directory is empty\n");
-        //free(filehandle_toFind);   //IMPORTANTE E DA VERIFICARE
+        free(filehandle_toFind);   //IMPORTANTE E DA VERIFICARE
         return NULL;
     }
     
     printf("The file doesn't exist, please try with a different file\n");
     free(filehandle_toFind);
-    //free(ffb);                    //IMPORTANTE E DA VERIFICARE
+    free(ffb);                    //IMPORTANTE E DA VERIFICARE
     return NULL;
 }
 
@@ -344,21 +344,22 @@ int SimpleFS_changeDir(DirectoryHandle* d, char* dirname){
         d ->pos_in_block = 0;       //SIDE-EFFECT
         d ->dcb = d ->directory;    //SO THE DIRECTORY BECOMES THE FATHER
 
-        FirstDirectoryBlock ParentDir;
+        FirstDirectoryBlock* ParentDir = (FirstDirectoryBlock*)malloc(sizeof(FirstDirectoryBlock));
         SimpleFS* simplefs = d ->sfs;
 
         if(d ->dcb ->fcb.directory_block != -1){
 
-            if(DiskDriver_readBlock(simplefs ->disk, &ParentDir, d ->dcb ->fcb.directory_block) != -1){
+            if(DiskDriver_readBlock(simplefs ->disk, ParentDir, d ->dcb ->fcb.directory_block) == -1){
                 
                 printf("Impossible to read parent directory from disk\n");
                 d ->directory = NULL;
+                free(ParentDir);
                 return -1;
             
             }
             else{
                 
-                d ->directory = &ParentDir;
+                d ->directory = ParentDir;
                 return 0;
             
             }
@@ -366,6 +367,7 @@ int SimpleFS_changeDir(DirectoryHandle* d, char* dirname){
         else{
             
             d ->directory = NULL;
+            free(ParentDir);
             return 0;
         }
     }
@@ -427,6 +429,7 @@ int SimpleFS_changeDir(DirectoryHandle* d, char* dirname){
     }
 
     printf("Impossible to change directory, there's not in the disk\n");
+    free(DirToFind);
     return -1;
 }
 
@@ -550,7 +553,7 @@ int SimpleFS_mkDir(DirectoryHandle* d, char* dirname){
         return -1;
     }
 
-    //free(new_directory);    //IMPORTANTE E DA VERIFICARE
+    free(new_directory);    //IMPORTANTE E DA VERIFICARE
 
     int whichupdate = 0;
     int before_pos = firstdirblock ->fcb.block_in_disk;
