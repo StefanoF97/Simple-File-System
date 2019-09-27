@@ -233,7 +233,7 @@ int main(int argc, char** argv) {
         
         printf("\e[1;32mTESTS for SimpleFS_write\n\n\e[00m");
 
-        printf("Provo a scrivere in un nuovo file 'write_file' una stringa abbastanza lunga\n");
+        printf("Provo a scrivere in un nuovo file 'write_file' una stringa di 30 'a' \n");
         filehandle = SimpleFS_createFile(dir_root, "write_file");
         if(filehandle == NULL){
             printf("Error in creating a file(ERROR)\n");
@@ -250,14 +250,14 @@ int main(int argc, char** argv) {
         
         int bytes = SimpleFS_write(filehandle, frase, 30);
         if(bytes != -1){
-            printf("Il file è stato scritto -> posizione nel file(quanti byte in totale): %d -> dati: %s (SUCCESS)\n\n", filehandle ->pos_in_file, filehandle ->fcb ->data);
+            printf("Il file è stato scritto -> posizione nel file(quanti byte in totale): %d \n\n", filehandle ->pos_in_file);
         }
         else{
             printf("Errore nella scrittura del file write_file(ERROR)\n");
         }
         free(frase);
 
-        printf("Provo a scrivere in un nuovo file 'write_file2' una stringa abbastanza lunga\n");
+        printf("Provo a scrivere in un nuovo file 'write_file2' una stringa di 499 'b' e 1 'c' \n");
         FileHandle* filehandleW = SimpleFS_createFile(dir_root, "write_file2");
         if(filehandleW == NULL){
             printf("Error in creating a file(ERROR)\n");
@@ -275,7 +275,7 @@ int main(int argc, char** argv) {
 
         bytes = SimpleFS_write(filehandleW, frase, 500);
         if(bytes != -1){
-            printf("Il file è stato scritto -> posizione nel file(quanti byte in totale): %d -> dati(quelli che sono entrati in uno...) : %s (SUCCESS)\n\n", filehandleW ->pos_in_file, filehandleW ->fcb ->data);
+            printf("Il file è stato scritto -> posizione nel file(quanti byte in totale): %d \n\n", filehandleW ->pos_in_file);
         }
         else{
             printf("Errore nella scrittura del file write_file(ERROR)\n");
@@ -291,7 +291,7 @@ int main(int argc, char** argv) {
 
         bytes = SimpleFS_write(filehandleW, frase, 2);
         if(bytes != -1){
-            printf("Il file è stato scritto -> posizione nel file(quanti byte in totale): %d -> dati(il blocco di prima...) : %s -> byte scritti: %d (SUCCESS)\n\n", filehandleW ->pos_in_file, filehandleW ->fcb ->data, bytes);
+            printf("Il file è stato scritto -> posizione nel file(quanti byte in totale): %d -> byte scritti: %d (SUCCESS)\n\n", filehandleW ->pos_in_file, bytes);
         }
         else{
             printf("Errore nella scrittura del file write_file(ERROR)\n");
@@ -304,7 +304,8 @@ int main(int argc, char** argv) {
 
         printf("Provo a leggere il file ' write_file ' appena scritto\n");
 
-        frase = calloc(30, sizeof(char));
+        frase = calloc(31, sizeof(char));
+        frase[30] = '\0';
 
         bytes = SimpleFS_read(filehandle, frase, 30);
 
@@ -320,17 +321,18 @@ int main(int argc, char** argv) {
         
         //
         
-        frase = calloc(502, sizeof(char));
+        frase = calloc(503, sizeof(char));
+        frase[502] = '\0';
 
         bytes = SimpleFS_read(filehandleW, frase, 502);
         
         //
         
         if(bytes != -1){
-            printf("Il file %s è stato letto -> dati TOTALI: %s (SUCCESS) \n\n\n", filehandleW ->fcb ->fcb.name, frase);
+            printf("Il file %s è stato letto -> dati TOTALI: %s (SUCCESS) \n\n", filehandleW ->fcb ->fcb.name, frase);
         }
         else{
-            printf("Errore nella lettura del file %s (ERROR) \n\n\n", filehandleW ->fcb ->fcb.name);
+            printf("Errore nella lettura del file %s (ERROR) \n\n", filehandleW ->fcb ->fcb.name);
         }
         free(frase);
         
@@ -467,7 +469,9 @@ int main(int argc, char** argv) {
         
         printf("Provo a leggere il file write_file2 appena aperto\n");
         
-        char* frase = calloc(502, sizeof(char));
+        char* frase = calloc(503, sizeof(char));
+        frase[502] = '\0';
+
         int bytes = SimpleFS_read(file_to_open, frase, 502);
         
         if(bytes == -1){
@@ -519,8 +523,8 @@ int main(int argc, char** argv) {
             printf("Nome della cartella: %s (SUCCESS)\n\n", dir_root ->dcb ->fcb.name);
         }
 
-        printf("Creo nella cartella ' DirOne ' un file chiamato ' File4DirOne ' \n");
-        FileHandle* file_to_create = SimpleFS_createFile(dir_root, "File4DirOne");
+        printf("Creo nella cartella ' DirOne ' un file chiamato ' File4Dir1 ' \n");
+        FileHandle* file_to_create = SimpleFS_createFile(dir_root, "File4Dir1");
         if(file_to_create == NULL){
             printf("Errore nella crezione del file ' File4Dir1 ' (ERROR)\n\n");
         }
@@ -530,10 +534,10 @@ int main(int argc, char** argv) {
             SimpleFS_close(file_to_create);
         }
 
-        printf("Creo nella cartella ' DirOne ' un file chiamato ' File4DirTwo ' \n");
-        file_to_create = SimpleFS_createFile(dir_root, "File4DirTwo");
+        printf("Creo nella cartella ' DirOne ' un file chiamato ' File4Dir2 ' \n");
+        file_to_create = SimpleFS_createFile(dir_root, "File4Dir2");
         if(file_to_create == NULL){
-            printf("Errore nella crezione del file ' File4DirTwo ' (ERROR)\n\n");
+            printf("Errore nella crezione del file ' File4Dir2 ' (ERROR)\n\n");
         }
         else{
             printf("File creato con successo\n");
@@ -541,8 +545,8 @@ int main(int argc, char** argv) {
             SimpleFS_close(file_to_create);
         }
 
-        printf("Creo nella cartella ' DirOne ' un file chiamato ' File4DirThr ' \n");
-        file_to_create = SimpleFS_createFile(dir_root, "File4DirThr");
+        printf("Creo nella cartella ' DirOne ' un file chiamato ' File4Dir3 ' \n");
+        file_to_create = SimpleFS_createFile(dir_root, "File4Dir3");
         if(file_to_create == NULL){
             printf("Errore nella crezione del file ' File4DirThr ' (ERROR)\n\n");
         }
@@ -694,19 +698,21 @@ int main(int argc, char** argv) {
         }
         frase[599] = 'g';
         
-        printf("Provo a scrivere dentro a 'file2' qualcosa\n");
+        printf("Provo a scrivere dentro a 'file2' 599 'f' e 1 'g' \n");
         ret = SimpleFS_write(file_to_write, frase, 600);
         if(ret == -1){
             printf("Errore nella scrittura del file (ERROR) \n\n\n");
         }
         else{
-            printf("Il file è stato scritto -> posizione nel file(quanti byte in totale): %d -> dati(prima parte) : %s -> (SUCCESS)\n\n", file_to_write ->pos_in_file, file_to_write ->fcb ->data);
+            printf("Il file è stato scritto -> posizione nel file(quanti byte in totale): %d -> (SUCCESS)\n\n", file_to_write ->pos_in_file);
         }
         free(frase);
 
         
         printf("Provo a leggere 'file2' completo\n");
-        frase = (char*)malloc(sizeof(char) * 600);
+        frase = (char*)malloc(sizeof(char) * 601);
+        frase[600] = '\0';
+
         ret = SimpleFS_read(file_to_write, frase, 600);
         if(ret == -1){
             printf("Errore nella lettura del file 'file_to_write'\n\n");
@@ -736,9 +742,10 @@ int main(int argc, char** argv) {
         }
         else{
             printf("Cambio directory avvenuto\n");
-            printf("Nome directory: %s\n\n\n", dir_root ->dcb ->fcb.name);
+            printf("Nome directory: %s\n", dir_root ->dcb ->fcb.name);
         }        
-        
+        printf("(SUCCESS)\n\n\n");
+
         SimpleFS_close(file_to_write);
         SimpleFS_close(file_to_open);
         SimpleFS_close(file_to_create);
