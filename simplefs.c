@@ -683,13 +683,12 @@ int SimpleFS_write(FileHandle* f, void* data, int size){
     }
 
     //this is the case when i write to the other file block 
-    
     int next = f ->fcb ->header.next_block;
     int blockIndisk = f -> fcb ->fcb.block_in_disk;
     int blockInfile = f ->fcb ->header.block_in_file;
     int is_this_first_block = 0;
-    FileBlock fileblock_to_mem;
-   
+    FileBlock fileblock_to_mem ;
+    
     if(next == -1){
         is_this_first_block = 1;
     }
