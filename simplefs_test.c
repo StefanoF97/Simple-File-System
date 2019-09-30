@@ -13,7 +13,7 @@ int main(int argc, char** argv) {
     printf("DirectoryBlock size %ld\n\n", sizeof(DirectoryBlock));
     printf("\n");
 
-    printf("Starting test for SimpleFS....\n\n");
+    printf("Starting simulation for SimpleFS....\n\n");
 
     printf("\e[1;32mTESTS FOR SimpleFS_init AND SimpleFS_format\n\n\e[00m");
     
@@ -679,7 +679,7 @@ int main(int argc, char** argv) {
             printf("Errore nella lettura della directory ' Dir4DirOne '\n");
         }
         else{
-            printf("Lettura della directory ' root ' avvenuta\n");
+            printf("Lettura della directory ' Dir4DirOne ' avvenuta\n");
             printf("File trovati: ");
             for(i = 0; i < dir_root ->dcb ->num_entries; i++){
                 printf("%s - ", names[i]);
@@ -744,11 +744,56 @@ int main(int argc, char** argv) {
             printf("Cambio directory avvenuto\n");
             printf("Nome directory: %s\n", dir_root ->dcb ->fcb.name);
         }        
-        printf("(SUCCESS)\n\n\n");
+        printf("(SUCCESS)\n\n");
 
+        printf("Riapro il write_file2, provo a scrivere venti caratteri uguali 'w' nel mezzo del file, e provo a leggerlo\n");
+        FileHandle* file_to_seek = SimpleFS_openFile(dir_root, "write_file2");
+        if(file_to_seek == NULL){
+            printf("Impossibile aprire il file write_file2\n");
+        }
+        else{
+            printf("Il file %s è stato aperto con successo\n", file_to_seek ->fcb ->fcb.name);
+        }
+        
+        ret = SimpleFS_seek(file_to_seek, 70);
+        if(ret == -1){
+            printf("Impossibile fare la seek sul file\n");
+        }
+        else{
+            printf("Seek avvenuta con successo\n");
+        }
+        
+        frase = (char*)malloc(sizeof(char) * 20);
+        for(i = 0; i < 20; i++){
+            frase[i] = 'w';
+        }
+
+        ret = SimpleFS_write(file_to_seek, frase, 20);
+        if(ret == -1){
+            printf("Impossibile scrivere il file\n");
+        }
+        else{
+            printf("Scrittura del file avvenuta con successo\n");
+        }
+        free(frase);
+
+        frase = calloc(503, sizeof(char));
+        frase[502] = '\0';
+
+        bytes = SimpleFS_read(file_to_seek, frase, 502);
+        if(bytes == -1){
+            printf("Impossibile leggere il file\n\n\n");
+        }
+        else
+        {
+            printf("Dati letti: %s -> (SUCCESS)\n\n\n", frase);
+        }
+        
+        free(frase);
         SimpleFS_close(file_to_write);
         SimpleFS_close(file_to_open);
         SimpleFS_close(file_to_create);
+        SimpleFS_close(file_to_seek);
         free(dir_root ->dcb);
         free(dir_root ->directory);
         free(dir_root);
