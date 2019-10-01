@@ -7,15 +7,16 @@
 
 int main(int argc, char** argv) {
     
+    printf("\n");
     printf("FirstBlock size %ld\n", sizeof(FirstFileBlock));
     printf("DataBlock size %ld\n", sizeof(FileBlock));
     printf("FirstDirectoryBlock size %ld\n", sizeof(FirstDirectoryBlock));
     printf("DirectoryBlock size %ld\n\n", sizeof(DirectoryBlock));
     printf("\n");
 
-    printf("Starting simulation for SimpleFS....\n\n");
+    printf("Starting SIMULATION/TESTS for SimpleFS....\n\n");
 
-    printf("\e[1;32mTESTS FOR SimpleFS_init AND SimpleFS_format\n\n\e[00m");
+    printf("\e[1;32mSimpleFS_init AND SimpleFS_format\n\n\e[00m");
     
     DiskDriver disk;
     SimpleFS sfs;
@@ -39,7 +40,7 @@ int main(int argc, char** argv) {
 
     if(disk_has_just_been_created == 1){
 
-        printf("\e[1;32mTESTS FOR SimpleFS_createFile\n\n\e[00m");
+        printf("\e[1;32mSimpleFS_createFile\n\n\e[00m");
         
         printf("Creo un primo file chiamato first_file\n");
         FileHandle* filehandle = SimpleFS_createFile(dir_root, "first_file");
@@ -65,7 +66,7 @@ int main(int argc, char** argv) {
         printf("Creo un terzo file chiamato second_file\n");
         filehandle = SimpleFS_createFile(dir_root, "second_file");
         if(filehandle != NULL){
-            printf("FileHandle creato correttamente(SUCCESS)\n\n");
+            printf("FileHandle creato correttamente(SUCCESS)\n");
             printf("Nome del file creato: %s\n\n", filehandle ->fcb ->fcb.name);
             SimpleFS_close(filehandle);
         }
@@ -76,7 +77,7 @@ int main(int argc, char** argv) {
         printf("Creo un quarto file chiamato third_file\n");
         filehandle = SimpleFS_createFile(dir_root, "third_file");
         if(filehandle != NULL){
-            printf("FileHandle creato correttamente(SUCCESS)\n\n");
+            printf("FileHandle creato correttamente(SUCCESS)\n");
             printf("Nome del file creato: %s\n\n", filehandle ->fcb ->fcb.name);
             SimpleFS_close(filehandle);
         }
@@ -86,9 +87,9 @@ int main(int argc, char** argv) {
 
         printf("\n\n");
 
-        printf("\e[1;32mTESTS FOR SimpleFS_openFile\n\n\e[00m");
+        printf("\e[1;32mSimpleFS_openFile\n\n\e[00m");
 
-        printf("Provo ad aprie il file 'first_file' nella directory root\n");
+        printf("Provo ad aprire il file 'first_file' nella directory root\n");
         FileHandle* file_to_open = SimpleFS_openFile(dir_root, "first_file");
         if(file_to_open == NULL){
             printf("Error in opening file 'first_file'(ERROR)\n");
@@ -99,7 +100,7 @@ int main(int argc, char** argv) {
             SimpleFS_close(file_to_open);
         }
 
-        printf("Provo ad aprie il file 'second_file' nella directory root\n");
+        printf("Provo ad aprire il file 'second_file' nella directory root\n");
         file_to_open = SimpleFS_openFile(dir_root, "second_file");
         if(file_to_open == NULL){
             printf("Error in opening file 'second_file'(ERROR)\n");
@@ -110,31 +111,29 @@ int main(int argc, char** argv) {
             SimpleFS_close(file_to_open);
         }
 
-        printf("Provo ad aprie il file 'fourth_file' nella directory root\n");
+        printf("Provo ad aprire il file 'fourth_file' nella directory root\n");
         file_to_open = SimpleFS_openFile(dir_root, "fourth_file");
         if(file_to_open == NULL){
             printf("Error in opening file 'fourth_file'(SUCCESS)\n\n");
         }
         else{
             printf("File 'fourth_file' aperto (ERROR)\n");
-            printf("Nome del file aperto -> %s\n\n\n", file_to_open ->fcb ->fcb.name);
+            printf("Nome del file aperto -> %s\n\n", file_to_open ->fcb ->fcb.name);
             SimpleFS_close(file_to_open);
         }
 
-        printf("Provo ad aprie il file 'third_file' nella directory root\n");
+        printf("Provo ad aprire il file 'third_file' nella directory root\n");
         file_to_open = SimpleFS_openFile(dir_root, "third_file");
         if(file_to_open == NULL){
             printf("Error in opening file 'third_file'(ERROR)\n\n");
         }
         else{
             printf("File 'third_file' aperto (SUCCESS)\n");
-            printf("Nome del file aperto -> %s\n\n\n", file_to_open ->fcb ->fcb.name);
+            printf("Nome del file aperto -> %s\n\n", file_to_open ->fcb ->fcb.name);
             SimpleFS_close(file_to_open);
         }
         
-        printf("\n\n");
-
-        printf("\e[1;32mTESTS FOR SimpleFS_readDir\n\n\e[00m");
+        printf("\e[1;32mSimpleFS_readDir\n\n\e[00m");
 
         char** names =(char**)malloc(sizeof(char*) * dir_root ->dcb ->num_entries);
         int ret, i;
@@ -144,7 +143,7 @@ int main(int argc, char** argv) {
             printf("Errore nella lettura della directory (ERROR)\n");
         }
         else{
-            printf("\nLettura della directory avvenuta\n");
+            printf("Lettura della directory avvenuta\n");
             printf("File trovati: ");
             for(i = 0; i < dir_root ->dcb ->num_entries; i++){
                 printf("%s - ", names[i]);
@@ -157,8 +156,7 @@ int main(int argc, char** argv) {
 
         printf("\n\n");
 
-        
-        printf("\e[1;32mTESTS FOR SimpleFS_mkDir\n\n\e[00m");
+        printf("\e[1;32mSimpleFS_mkDir\n\n\e[00m");
         
         printf("Creo una sottocartella per la directory 'dir_root' chiamata 'subDir'\n");
         int res = SimpleFS_mkDir(dir_root, "subDir");
@@ -187,7 +185,7 @@ int main(int argc, char** argv) {
         }
         
         
-        printf("\e[1;32mTESTS FOR SimpleFS_changeDir\n\n\e[00m");
+        printf("\e[1;32mSimpleFS_changeDir\n\n\e[00m");
         printf("Provo ad andare dalla directory root alla directory subDir2(non esiste)\n");
 
         res = SimpleFS_changeDir(dir_root, "subDirTwo");
@@ -231,7 +229,7 @@ int main(int argc, char** argv) {
         }
 
         
-        printf("\e[1;32mTESTS for SimpleFS_write\n\n\e[00m");
+        printf("\e[1;32mSimpleFS_write\n\n\e[00m");
 
         printf("Provo a scrivere in un nuovo file 'write_file' una stringa di 30 'a' \n");
         filehandle = SimpleFS_createFile(dir_root, "write_file");
@@ -337,7 +335,7 @@ int main(int argc, char** argv) {
         free(frase);
         
         
-        printf("\e[1;32mTESTS for SimpleFS_remove\n\n\e[00m");
+        printf("\e[1;32mSimpleFS_remove\n\n\e[00m");
 
         printf("Provo a eliminare il file ' file_write3 ' (non esiste) \n");
         ret = SimpleFS_remove(dir_root, "write_file3");
