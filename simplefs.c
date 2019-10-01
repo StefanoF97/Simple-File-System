@@ -687,7 +687,7 @@ int SimpleFS_write(FileHandle* f, void* data, int size){
     int blockIndisk = f -> fcb ->fcb.block_in_disk;
     int blockInfile = f ->fcb ->header.block_in_file;
     int is_this_first_block = 0;
-    FileBlock fileblock_to_mem ;
+    FileBlock fileblock_to_mem;     //LOOK HERE IF THERE IS PROBLEM
     
     if(next == -1){
         is_this_first_block = 1;
