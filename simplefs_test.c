@@ -28,7 +28,7 @@ int main(int argc, char** argv) {
     DirectoryHandle* dir_root = SimpleFS_init(&sfs, &disk);
     if(dir_root == NULL){
         disk_has_just_been_created = 1;
-        printf("Perhaps i need to format(i'll write something to read)...\n");
+        printf("Perhaps i need to format(i'll write the root on the disk)...\n");
         SimpleFS_format(&sfs);
         dir_root = SimpleFS_init(&sfs, &disk);
         if(dir_root == NULL){
@@ -37,6 +37,71 @@ int main(int argc, char** argv) {
         }
     }
     printf("\n");
+
+    /*
+    FileHandle* more_file;
+    char file_name[10];
+    int i;
+    
+    for(i = 0; i < 100; i++){
+        sprintf(file_name, "%d", i);
+        more_file = SimpleFS_createFile(dir_root, file_name);
+        if(more_file != NULL)
+            printf("File creato: %s\n", more_file ->fcb ->fcb.name);
+    }
+    if(more_file != NULL)
+        SimpleFS_close(more_file);
+    
+    printf("\n\n");
+    
+    char** files =(char**)malloc(sizeof(char*) * dir_root ->dcb ->num_entries);
+
+    int ret = SimpleFS_readDir(files, dir_root);
+    if(ret == -1){
+        printf("Errore nella lettura della directory (ERROR)\n");
+    }
+    else{
+        printf("Lettura della directory avvenuta\n");
+        printf("File trovati: ");
+        for(i = 0; i < dir_root ->dcb ->num_entries; i++){
+            printf("%s - ", files[i]);
+        }
+    }
+    for(i = 0; i < dir_root ->dcb ->num_entries; i++){
+        free(files[i]);
+    }
+    free(files);
+    printf("\n\n");
+
+    printf("Elimino il file 80\n");
+    ret = SimpleFS_remove(dir_root, "80");
+    if(ret == -1){
+        printf("Impossibile eliminare il file 80\n\n");
+    }
+    else{
+        printf("Eliminazione del file 80 avvenuta con successo\n\n");
+    }
+    
+    files =(char**)malloc(sizeof(char*) * dir_root ->dcb ->num_entries);
+    ret = SimpleFS_readDir(files, dir_root);
+    if(ret == -1){
+        printf("Errore nella lettura della directory (ERROR)\n");
+    }
+    else{
+        printf("Lettura della directory avvenuta\n");
+        printf("File trovati: ");
+        for(i = 0; i < dir_root ->dcb ->num_entries; i++){
+            printf("%s - ", files[i]);
+        }
+    }
+    for(i = 0; i < dir_root ->dcb ->num_entries; i++){
+        free(files[i]);
+    }
+    free(files);
+    printf("\n\n");
+    
+    return 0;
+    */
 
     if(disk_has_just_been_created == 1){
 
@@ -333,7 +398,52 @@ int main(int argc, char** argv) {
             printf("Errore nella lettura del file %s (ERROR) \n\n", filehandleW ->fcb ->fcb.name);
         }
         free(frase);
+
+        printf("\e[1;32mSimpleFS_seek\n\n\e[00m");
         
+        printf("Aggiungo 30 'w' al file write_file utilizzando la seek\n");
+        FileHandle* file_to_seek = SimpleFS_openFile(dir_root, "write_file");
+        if(file_to_seek == NULL){
+            printf("Impossibile aprire il file write_file (ERROR)\n");
+        }
+        else{
+            printf("Il file %s è stato aperto con successo (SUCCESS)\n", file_to_seek ->fcb ->fcb.name);
+        }
+        
+        ret = SimpleFS_seek(file_to_seek, 20);
+        if(ret == -1){
+            printf("Impossibile fare la seek del file %s (ERROR)\n", file_to_seek ->fcb ->fcb.name);
+        }
+        else{
+            printf("La seek è stata effettuata con successo (SUCCESS)\n");
+        }
+        
+        frase = (char*)malloc(sizeof(char) * 30);
+        for(i = 0; i < 30; i++){
+            frase[i] = 'w';
+        }
+        
+        ret = SimpleFS_write(file_to_seek, frase, 30);
+        if(ret == -1){
+            printf("Errore nella scrittura del file (ERROR)\n");
+        }
+        else{
+            printf("Il file è stato scritto -> posizione nel file(quanti byte in totale): %d (SUCCESS)\n\n", file_to_seek ->fcb ->fcb.size_in_bytes);
+        }
+        free(frase);
+        
+        frase = (char*)malloc(sizeof(char) * 51);
+        frase[50] = '\0';
+
+        ret = SimpleFS_read(file_to_seek, frase, 50);
+        if(ret == -1){
+            printf("Errore nella lettura del file (ERROR) \n\n");
+        }
+        else{
+            printf("Il file %s è stato letto -> dati TOTALI: %s (SUCCESS) \n\n", file_to_seek ->fcb ->fcb.name, frase);
+        }
+        free(frase);
+        SimpleFS_close(file_to_seek);
         
         printf("\e[1;32mSimpleFS_remove\n\n\e[00m");
 
@@ -448,6 +558,7 @@ int main(int argc, char** argv) {
                 printf("%s - ", names[i]);
             }
         }
+        printf("(SUCCESS)");
         for(i = 0; i < dir_root ->dcb ->num_entries; i++){
             free(names[i]);
         }
@@ -484,10 +595,10 @@ int main(int argc, char** argv) {
         printf("Creo una nuova cartella chiamata ' DirOne '\n");
         ret = SimpleFS_mkDir(dir_root, "DirOne");
         if(ret == -1){
-            printf("Errore nella creazione della nuova directory (ERROR/SUCCESS)\n");
+            printf("Errore nella creazione della nuova directory (ERROR)\n");
         }
         else{
-            printf("Directory creata con successo\n");    
+            printf("Directory creata con successo (SUCCESS)\n");    
         }
 
         printf("Lista Files/Directories a partire dalla root\n");
@@ -504,6 +615,7 @@ int main(int argc, char** argv) {
                 printf("%s - ", names[i]);
             }
         }
+        printf("(SUCCESS)");
         for(i = 0; i < dir_root ->dcb ->num_entries; i++){
             free(names[i]);
         }
@@ -528,7 +640,7 @@ int main(int argc, char** argv) {
         }
         else{
             printf("File creato con successo\n");
-            printf("Nome del file: %s\n\n", file_to_create ->fcb ->fcb.name);
+            printf("Nome del file: %s (SUCCESS)\n\n", file_to_create ->fcb ->fcb.name);
             SimpleFS_close(file_to_create);
         }
 
@@ -539,7 +651,7 @@ int main(int argc, char** argv) {
         }
         else{
             printf("File creato con successo\n");
-            printf("Nome del file: %s\n\n", file_to_create ->fcb ->fcb.name);
+            printf("Nome del file: %s (SUCCESS)\n\n", file_to_create ->fcb ->fcb.name);
             SimpleFS_close(file_to_create);
         }
 
@@ -550,7 +662,7 @@ int main(int argc, char** argv) {
         }
         else{
             printf("File creato con successo\n");
-            printf("Nome del file: %s\n\n", file_to_create ->fcb ->fcb.name);
+            printf("Nome del file: %s (SUCCESS)\n\n", file_to_create ->fcb ->fcb.name);
             SimpleFS_close(file_to_create);
         }
 
@@ -562,7 +674,7 @@ int main(int argc, char** argv) {
         }
         else{
             printf("File creato con successo\n");
-            printf("Nome del file: %s\n\n", file_to_create ->fcb ->fcb.name);
+            printf("Nome del file: %s (SUCCESS)\n\n", file_to_create ->fcb ->fcb.name);
         }
 
         printf("Lista files della directory ' DirOne '\n");
@@ -579,6 +691,7 @@ int main(int argc, char** argv) {
                 printf("%s - ", names[i]);
             }
         }
+        printf("(SUCCESS)");
         for(i = 0; i < dir_root ->dcb ->num_entries; i++){
             free(names[i]);
         }
@@ -594,12 +707,12 @@ int main(int argc, char** argv) {
         }
         else{
             printf("Cambio di cartella avvenuto con successo\n");
-            printf("Nome della cartella: %s \n", dir_root ->dcb ->fcb.name);
+            printf("Nome della cartella: %s (SUCCESS)\n", dir_root ->dcb ->fcb.name);
         }
         names = (char**)malloc(sizeof(char*) * dir_root ->dcb ->num_entries);
         ret = SimpleFS_readDir(names, dir_root);
         if(ret == -1){
-            printf("Errore nella lettura della directory root\n\n");
+            printf("Errore nella lettura della directory root (ERROR)\n\n");
         }
         else{
             printf("Lettura della directory ' root ' avvenuta\n");
@@ -618,10 +731,10 @@ int main(int argc, char** argv) {
         printf("Provo a eliminare la directory DirOne\n");
         ret = SimpleFS_remove(dir_root, "DirOne");
         if(ret == -1){
-            printf("Errore nel tentativo di eliminare la directory ' DirOne ' \n\n");
+            printf("Errore nel tentativo di eliminare la directory ' DirOne ' (ERROR)\n\n");
         }
         else{
-            printf("Ok\n\n");
+            printf(" (SUCCESS)\n\n");
         }
 
         printf("Provo a creare una directory chiamata ' Dir4DirOne ' dentro la directory ' DirOne '\n");
@@ -639,7 +752,7 @@ int main(int argc, char** argv) {
             printf("Impossibile creare la cartella ' Dir4DirOne ' (ERROR)\n\n\n");
         }
         else{
-            printf("Directory creata con successo\n\n\n");
+            printf("Directory creata con successo (SUCCESS)\n\n\n");
         }
 
         printf("Creo due file dentro la directory ' Dir4DirOne ', 'file1' e 'file2'\n");
@@ -674,10 +787,10 @@ int main(int argc, char** argv) {
         names = (char**)malloc(sizeof(char*) * dir_root ->dcb ->num_entries);
         ret = SimpleFS_readDir(names, dir_root);
         if(ret == -1){
-            printf("Errore nella lettura della directory ' Dir4DirOne '\n");
+            printf("Errore nella lettura della directory ' Dir4DirOne ' (ERROR)\n");
         }
         else{
-            printf("Lettura della directory ' Dir4DirOne ' avvenuta\n");
+            printf("Lettura della directory ' Dir4DirOne ' avvenuta (SUCCESS)\n");
             printf("File trovati: ");
             for(i = 0; i < dir_root ->dcb ->num_entries; i++){
                 printf("%s - ", names[i]);
@@ -713,7 +826,7 @@ int main(int argc, char** argv) {
 
         ret = SimpleFS_read(file_to_write, frase, 600);
         if(ret == -1){
-            printf("Errore nella lettura del file 'file_to_write'\n\n");
+            printf("Errore nella lettura del file 'file_to_write' (ERROR)\n\n");
         }
         else{
             printf("Dati letti: %s -> (SUCCESS)\n\n", frase);
@@ -725,40 +838,39 @@ int main(int argc, char** argv) {
         printf("Ritorno alla directory radice\n");
         ret = SimpleFS_changeDir(dir_root, "..");
         if(ret == -1){
-            printf("Errore nel cambio di directory\n");
+            printf("Errore nel cambio di directory (ERROR)\n");
         }
         else{
             printf("Cambio directory avvenuto\n");
-            printf("Nome directory: %s\n", dir_root ->dcb ->fcb.name);
+            printf("Nome directory: %s (SUCCESS)\n", dir_root ->dcb ->fcb.name);
         }
 
         free(dir_root ->dcb);
         
         ret = SimpleFS_changeDir(dir_root, "..");
         if(ret == -1){
-            printf("Errore nel cambio di directory\n\n\n");
+            printf("Errore nel cambio di directory (ERROR)\n\n\n");
         }
         else{
             printf("Cambio directory avvenuto\n");
-            printf("Nome directory: %s\n", dir_root ->dcb ->fcb.name);
+            printf("Nome directory: %s (SUCCESS)\n\n", dir_root ->dcb ->fcb.name);
         }        
-        printf("(SUCCESS)\n\n");
-
+        
         printf("Riapro il write_file2, provo a scrivere venti caratteri uguali 'w' nel mezzo del file, e provo a leggerlo\n");
         FileHandle* file_to_seek = SimpleFS_openFile(dir_root, "write_file2");
         if(file_to_seek == NULL){
-            printf("Impossibile aprire il file write_file2\n");
+            printf("Impossibile aprire il file write_file2 (ERROR)\n");
         }
         else{
-            printf("Il file %s è stato aperto con successo\n", file_to_seek ->fcb ->fcb.name);
+            printf("Il file %s è stato aperto con successo (SUCCESS)\n", file_to_seek ->fcb ->fcb.name);
         }
         
         ret = SimpleFS_seek(file_to_seek, 70);
         if(ret == -1){
-            printf("Impossibile fare la seek sul file\n");
+            printf("Impossibile fare la seek sul file (ERROR)\n");
         }
         else{
-            printf("Seek avvenuta con successo\n");
+            printf("Seek avvenuta con successo (SUCCESS)\n");
         }
         
         frase = (char*)malloc(sizeof(char) * 20);
@@ -768,10 +880,10 @@ int main(int argc, char** argv) {
 
         ret = SimpleFS_write(file_to_seek, frase, 20);
         if(ret == -1){
-            printf("Impossibile scrivere il file\n");
+            printf("Impossibile scrivere il file (ERROR)\n");
         }
         else{
-            printf("Scrittura del file avvenuta con successo\n");
+            printf("Scrittura del file avvenuta con successo (SUCCESS)\n");
         }
         free(frase);
 
@@ -780,12 +892,43 @@ int main(int argc, char** argv) {
 
         bytes = SimpleFS_read(file_to_seek, frase, 502);
         if(bytes == -1){
-            printf("Impossibile leggere il file\n\n\n");
+            printf("Impossibile leggere il file (ERROR)\n\n");
         }
         else
         {
-            printf("Dati letti: %s -> (SUCCESS)\n\n\n", frase);
+            printf("Dati letti: %s -> (SUCCESS)\n\n", frase);
         }
+
+        
+        printf("Provo a eliminare il file 'write_file2'\n");
+        ret = SimpleFS_remove(dir_root, "write_file2");
+        if(ret == -1){
+            printf("Impossibile eliminare il file write_file2 (ERROR)\n\n\n");
+        }
+        else{ 
+            printf("L'eliminazione del file write_file2 è avvenuta con successo (SUCCESS)\n\n\n");
+        }
+        
+
+        char **files =(char**)malloc(sizeof(char*) * dir_root ->dcb ->num_entries);
+        ret = SimpleFS_readDir(files, dir_root);
+        if(ret == -1){
+            printf("Impossibile leggere la directory (ERROR)\n\n\n");
+        }
+        else{
+            printf("Lettura della directory avvenuta\n");
+            printf("File trovati: ");
+            for(i = 0; i < dir_root ->dcb ->num_entries; i++){
+                printf("%s - ", files[i]);
+            }
+        }
+        printf("(SUCCESS)");
+
+        for(i = 0; i < dir_root ->dcb ->num_entries; i++){
+            free(files[i]);
+        }
+        free(files);
+        printf("\n\n");
         
         free(frase);
         SimpleFS_close(file_to_write);
