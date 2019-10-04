@@ -38,12 +38,12 @@ int main(int argc, char** argv) {
     }
     printf("\n");
 
-    /*
+    /*          //TESTS FOR MULTIPLE FILES
     FileHandle* more_file;
     char file_name[10];
     int i;
     
-    for(i = 0; i < 100; i++){
+    for(i = 0; i < 220; i++){
         sprintf(file_name, "%d", i);
         more_file = SimpleFS_createFile(dir_root, file_name);
         if(more_file != NULL)
@@ -73,13 +73,13 @@ int main(int argc, char** argv) {
     free(files);
     printf("\n\n");
 
-    printf("Elimino il file 80\n");
-    ret = SimpleFS_remove(dir_root, "80");
+    printf("Elimino il file 217\n");
+    ret = SimpleFS_remove(dir_root, "217");
     if(ret == -1){
-        printf("Impossibile eliminare il file 80\n\n");
+        printf("Impossibile eliminare il file 217\n\n");
     }
     else{
-        printf("Eliminazione del file 80 avvenuta con successo\n\n");
+        printf("Eliminazione del file 217 avvenuta con successo\n\n");
     }
     
     files =(char**)malloc(sizeof(char*) * dir_root ->dcb ->num_entries);
@@ -99,10 +99,105 @@ int main(int argc, char** argv) {
     }
     free(files);
     printf("\n\n");
+
+    printf("Apro il file 203\n");
+    FileHandle* fopen = SimpleFS_openFile(dir_root, "203");
+    if(fopen == NULL){
+        printf("Impossibile leggere il file 203\n\n");
+    }
+    else{
+        printf("Apertura avvenuta con successo\n");
+        printf("File aperto %s \n\n", fopen ->fcb ->fcb.name);
+    }
     
     return 0;
     */
 
+    /*        //TESTS FOR MULTIPLE DIRECTORIES
+    
+    FileHandle* more_directory;
+    char file_name[10];
+    int i, ret;
+    
+    for(i = 0; i < 220; i++){
+        sprintf(file_name, "%d", i);
+        ret = SimpleFS_mkDir(dir_root, file_name);
+        if(ret == -1)
+            printf("Errore nella creazione della directory (ERROR)\n");
+        else
+            printf("Directory creata con successo\n");    
+    }
+    printf("\n\n");
+
+    char** files =(char**)malloc(sizeof(char*) * dir_root ->dcb ->num_entries);
+
+    ret = SimpleFS_readDir(files, dir_root);
+    if(ret == -1){
+        printf("Errore nella lettura della directory (ERROR)\n");
+    }
+    else{
+        printf("Lettura della directory avvenuta\n");
+        printf("Directories trovate: ");
+        for(i = 0; i < dir_root ->dcb ->num_entries; i++){
+            printf("%s - ", files[i]);
+        }
+    }
+    for(i = 0; i < dir_root ->dcb ->num_entries; i++){
+        free(files[i]);
+    }
+    free(files);
+    printf("\n\n");
+
+    printf("Elimino la directory 211\n");
+    ret = SimpleFS_remove(dir_root, "211");
+    if(ret == -1){
+        printf("Impossibile eliminare la directory 211\n\n");
+    }
+    else{
+        printf("Eliminazione della directory 211 avvenuta con successo\n\n");
+    }
+    
+    files =(char**)malloc(sizeof(char*) * dir_root ->dcb ->num_entries);
+    ret = SimpleFS_readDir(files, dir_root);
+    if(ret == -1){
+        printf("Errore nella lettura della directory (ERROR)\n");
+    }
+    else{
+        printf("Lettura della directory avvenuta\n");
+        printf("File trovati: ");
+        for(i = 0; i < dir_root ->dcb ->num_entries; i++){
+            printf("%s - ", files[i]);
+        }
+    }
+    for(i = 0; i < dir_root ->dcb ->num_entries; i++){
+        free(files[i]);
+    }
+    free(files);
+    printf("\n\n");
+
+    printf("Faccio il cambio directory con la directory 213\n");
+    ret = SimpleFS_changeDir(dir_root, "213");
+    if(ret == -1){
+        printf("Errore nel cambio di directory (ERROR)\n\n");
+    }
+    else{
+        printf("Cambio directory avvenuto con successo\n");
+        printf("Nome della directory: %s \n\n", dir_root ->dcb ->fcb.name);
+    }
+
+    printf("Ritorno alla directory radice\n");
+    ret = SimpleFS_changeDir(dir_root, "..");
+    if(ret == -1){
+        printf("Impossibile tornare alla directory radice (ERROR)\n\n");
+    }
+    else{
+        printf("Cambio directory avvenuto con successo\n");
+        printf("Nome della directory: %s \n\n", dir_root ->dcb ->fcb.name);
+    }
+    
+    return 0;
+    */
+    
     if(disk_has_just_been_created == 1){
 
         printf("\e[1;32mSimpleFS_createFile\n\n\e[00m");
