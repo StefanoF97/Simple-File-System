@@ -104,7 +104,7 @@ int main(int argc, char*argv[]){
     printf("\n\n");
 
     a = bitmap4 ->entries[2];
-    printf("85 in seconda entry, in binario 01010101, setto a 0 il primo bit\n");
+    printf("85 in terza entry, in binario 01010101, setto a 0 il primo bit\n");
     for (i = 7; i >= 0; i--) {
         printf("%d", !!((a >> i) & 0x01));
     }
@@ -120,7 +120,7 @@ int main(int argc, char*argv[]){
     printf("\n\n");
 
     a = bitmap5 ->entries[4];
-    printf("8 in quarta entry, in binario 01010101, setto a 1 il quinto bit\n");
+    printf("8 in quinta entry, in binario 01010101, setto a 1 il quinto bit\n");
     for (i = 7; i >= 0; i--) {
         printf("%d", !!((a >> i) & 0x01));
     }
